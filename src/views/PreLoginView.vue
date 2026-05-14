@@ -34,6 +34,21 @@ const logoTiltRef = ref(null)
 const shineElRef = ref(null)
 let tilt = null
 
+// ── Nav ───────────────────────────────────────────────────────────────────
+const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR SUPPORT', 'YOUR WARRANTY']
+const navActiveIndex = ref(0)
+const navItemRefs = ref([])
+const navIndicatorStyle = ref({ left: '0px', width: '0px' })
+
+function updateNavIndicator(idx) {
+  const el = navItemRefs.value[idx]
+  if (!el) return
+  navIndicatorStyle.value = { left: el.offsetLeft + 'px', width: el.offsetWidth + 'px' }
+}
+function onNavEnter(i) { updateNavIndicator(i) }
+function onNavLeave() { updateNavIndicator(navActiveIndex.value) }
+function onNavClick(i) { navActiveIndex.value = i }
+
 // ── Modal ─────────────────────────────────────────────────────────────────
 const showModal = ref(false)
 const activeTab = ref('login')
@@ -191,6 +206,7 @@ onMounted(async () => {
   await nextTick()
   tilt = useTilt({ plateEl: plateTiltRef, logoEl: logoTiltRef, shineEl: shineElRef })
   tilt.start()
+  updateNavIndicator(0)
   runIntro()
 })
 
@@ -286,6 +302,22 @@ onUnmounted(() => {
 
         <!-- UI layer -->
         <div class="ui-layer">
+
+          <!-- Top-center nav -->
+          <nav class="nav-menu">
+            <div class="nav-indicator" :style="navIndicatorStyle"></div>
+            <template v-for="(item, i) in navItems" :key="item">
+              <button
+                class="nav-item"
+                :class="{ 'nav-item--active': navActiveIndex === i }"
+                :ref="el => { if (el) navItemRefs[i] = el }"
+                @mouseenter="onNavEnter(i)"
+                @mouseleave="onNavLeave"
+                @click="onNavClick(i)"
+              >{{ item }}</button>
+              <span v-if="i < navItems.length - 1" class="nav-sep" aria-hidden="true">-</span>
+            </template>
+          </nav>
 
           <!-- Top-left taglines -->
           <div class="taglines">
@@ -559,7 +591,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   position: relative;
-  background: #f0f0f0;
+  background: transparent;
   padding: 28px 32px;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d;
@@ -572,11 +604,59 @@ onUnmounted(() => {
   z-index: 2;
 }
 
+/* ── Top-center nav ──────────────────────────────────────────────────────── */
+.nav-menu {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  padding-bottom: 6px;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+.nav-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: #4CAF50;
+  transition: left 0.22s ease, width 0.22s ease;
+  pointer-events: none;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  font-family: 'Almarai', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #2d2d2d;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+}
+
+.nav-item:hover,
+.nav-item--active { color: #1a1a1a; }
+
+.nav-sep {
+  color: #2d2d2d;
+  opacity: 0.4;
+  font-size: 15px;
+  padding: 0 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* ── Top-left taglines ───────────────────────────────────────────────────── */
 .taglines {
   position: absolute;
-  top: 36px;
-  left: 42px;
+  top: 72px;
+  left: 64px;
   z-index: 5;
   display: flex;
   flex-direction: column;
@@ -606,8 +686,8 @@ onUnmounted(() => {
 /* ── Top-right auth buttons ──────────────────────────────────────────────── */
 .auth-buttons {
   position: absolute;
-  top: 48px;
-  right: 60px;
+  top: 72px;
+  right: 64px;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -700,8 +780,8 @@ onUnmounted(() => {
 /* ── Bottom-left trust badge ─────────────────────────────────────────────── */
 .trust-badge {
   position: absolute;
-  bottom: 36px;
-  left: 42px;
+  bottom: 64px;
+  left: 64px;
   z-index: 5;
 }
 
@@ -716,8 +796,8 @@ onUnmounted(() => {
 /* ── Bottom chat button ──────────────────────────────────────────────────── */
 .chat-cta {
   position: absolute;
-  bottom: 36px;
-  right: 42px;
+  bottom: 64px;
+  right: 64px;
   z-index: 5;
 }
 
@@ -935,12 +1015,12 @@ onUnmounted(() => {
    MOBILE
 ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .plate-content { background: #f0f0f0; }
+  .plate-content { background: transparent; }
 
-  .taglines { top: 20px; left: 20px; }
-  .auth-buttons { top: 20px; right: 20px; }
-  .trust-badge { bottom: 20px; left: 20px; }
-  .chat-cta { bottom: 20px; right: 20px; }
+  .taglines { top: 32px; left: 24px; }
+  .auth-buttons { top: 32px; right: 24px; }
+  .trust-badge { bottom: 32px; left: 24px; }
+  .chat-cta { bottom: 32px; right: 24px; }
 
   .trust-img { width: 180px; }
   .gates-logo { width: 280px; }
