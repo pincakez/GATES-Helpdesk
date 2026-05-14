@@ -13,7 +13,7 @@ export function useTilt({ plateEl, logoEl, shineEl }) {
   }
 
   function loop() {
-    const targetRy = (mouse.x - 0.5) * 2 * maxPlate
+    const targetRy = -(mouse.x - 0.5) * 2 * maxPlate
     const targetRx = -(mouse.y - 0.5) * 2 * maxPlate
 
     curPRy += (targetRy - curPRy) * lerpFactor
