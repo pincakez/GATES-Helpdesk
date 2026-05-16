@@ -32,8 +32,8 @@ function goChat() { window.location.href = '/chat' }
 <template>
   <div class="pre-auth-layout" dir="ltr">
 
-    <!-- Page content (router-view added in 3.5B) -->
-    <slot />
+    <!-- Page content -->
+    <router-view />
 
     <!-- ── Stationary overlay layer ──────────────────────────────────────── -->
     <div class="stationary-layer">
