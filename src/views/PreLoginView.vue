@@ -1,6 +1,7 @@
 <script setup>
-import { ref, inject, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useTilt } from '../composables/useTilt.js'
+import AuthModal from '../components/AuthModal.vue'
 
 // ── Phase state ───────────────────────────────────────────────────────────
 const phase = ref('intro')
@@ -30,9 +31,28 @@ const logoTiltRef = ref(null)
 const shineElRef = ref(null)
 let tilt = null
 
-// ── Stationary layer control (PreAuthLayout) ──────────────────────────────
-const setStationaryVisible = inject('setStationaryVisible', null)
-setStationaryVisible?.(false) // hide nav/buttons/chat during intro
+// ── Nav ───────────────────────────────────────────────────────────────────
+const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT']
+const navActiveIndex = ref(0)
+const navItemRefs = ref([])
+const navIndicatorStyle = ref({ left: '0px', width: '0px' })
+function updateNavIndicator(idx) {
+  const el = navItemRefs.value[idx]
+  if (!el) return
+  navIndicatorStyle.value = { left: el.offsetLeft + 'px', width: el.offsetWidth + 'px' }
+}
+function onNavEnter(i) { updateNavIndicator(i) }
+function onNavLeave() { updateNavIndicator(navActiveIndex.value) }
+function onNavClick(i) {
+  if (i === navItems.length - 1) { openModal('login'); return }
+  navActiveIndex.value = i
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+const showModal = ref(false)
+const modalInitialState = ref('login')
+function openModal(tab = 'login') { modalInitialState.value = tab; showModal.value = true }
+function goChat() { window.location.href = '/chat' }
 
 // ── Sleep helper ──────────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
@@ -41,7 +61,6 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 async function runIntro() {
   await sleep(300)
 
-  // 1. Fake cursor enters from bottom-center
   fakeCursorX.value = window.innerWidth / 2
   fakeCursorY.value = window.innerHeight - 60
   fakeCursorVisible.value = true
@@ -65,7 +84,6 @@ async function runIntro() {
   await animateBoxDraw(boxLeft, boxCursorY, targetBoxWidthPx, 600)
 
   await sleep(300)
-
   fakeCursorMode.value = 'arrow'
   await animateCursor(fakeCursorX.value, fakeCursorY.value, window.innerWidth + 80, fakeCursorY.value - 40, 400)
   fakeCursorVisible.value = false
@@ -97,7 +115,6 @@ async function runIntro() {
   phase.value = 'transition'
   await sleep(500)
   phase.value = 'main'
-  setStationaryVisible?.(true) // trigger entrance animation for nav/buttons/chat
 }
 
 async function typeText(textRef, str, delay) {
@@ -159,6 +176,7 @@ onMounted(async () => {
   await nextTick()
   tilt = useTilt({ plateEl: plateTiltRef, logoEl: logoTiltRef, shineEl: shineElRef })
   tilt.start()
+  updateNavIndicator(0)
   window.addEventListener('auth-modal-open', onTiltPause)
   window.addEventListener('auth-modal-close', onTiltResume)
   runIntro()
@@ -187,15 +205,10 @@ onUnmounted(() => {
       aria-hidden="true"
     >
       <div class="intro-content">
-        <!-- Line 1: GATES TECHNOLOGY -->
         <div class="intro-line1">
           {{ line1Text }}<span v-if="showLine1Cursor" class="tw-cursor" :class="{ blink: line1CursorBlink }">|</span>
         </div>
-
-        <!-- Hidden span to measure natural text width before box animation -->
         <span ref="introMeasureRef" class="intro-measure" aria-hidden="true">AT YOUR SERVICE</span>
-
-        <!-- Line 2: green box with AT YOUR SERVICE -->
         <div class="intro-box-wrap" :style="{ opacity: boxVisible ? 1 : 0 }">
           <div class="intro-box" :style="{ width: boxWidth + 'px' }">
             <span class="intro-box-text">
@@ -210,8 +223,6 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-
-      <!-- Fake cursor -->
       <div
         v-if="fakeCursorVisible"
         class="fake-cursor"
@@ -243,9 +254,8 @@ onUnmounted(() => {
       <div class="plate-perspective">
       <div class="plate-content" ref="plateTiltRef">
 
-        <!-- Center logo with tilt and shine -->
+        <!-- Center logo — rim light sits BEHIND shine-wrap so its filter doesn't affect the overlay -->
         <div class="logo-center">
-          <!-- Rim light: separate from shine-wrap so filter doesn't break mix-blend-mode overlay -->
           <img class="logo-rim" src="/assets/gates-logo.png" aria-hidden="true" />
           <div class="logo-shine-wrap" ref="logoTiltRef">
             <img src="/assets/gates-logo.png" alt="GATES Technology" class="gates-logo" />
@@ -253,8 +263,24 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- UI layer -->
+        <!-- UI layer — everything tilts with the plate -->
         <div class="ui-layer">
+
+          <!-- Top-center nav -->
+          <nav class="nav-menu">
+            <div class="nav-indicator" :style="navIndicatorStyle"></div>
+            <template v-for="(item, i) in navItems" :key="item">
+              <button
+                class="nav-item"
+                :class="{ 'nav-item--active': navActiveIndex === i }"
+                :ref="el => { if (el) navItemRefs[i] = el }"
+                @mouseenter="onNavEnter(i)"
+                @mouseleave="onNavLeave"
+                @click="onNavClick(i)"
+              >{{ item }}</button>
+              <span v-if="i < navItems.length - 1" class="nav-sep" aria-hidden="true">-</span>
+            </template>
+          </nav>
 
           <!-- Top-left taglines -->
           <div class="taglines">
@@ -263,9 +289,28 @@ onUnmounted(() => {
             <p class="tagline-line">EARN <RouterLink to="/offers" class="tagline-green tagline-link">[POINTS]</RouterLink> EVERY DAY</p>
           </div>
 
+          <!-- Top-right auth buttons -->
+          <div class="auth-buttons">
+            <button class="btn-text" @click="openModal('login')">LOG IN</button>
+            <button class="btn-pill" @click="openModal('register')">SIGN UP</button>
+          </div>
+
           <!-- Bottom-left trust badge -->
           <div class="trust-badge">
             <img src="/assets/trust-every-bit.png" alt="Trust Every Bit" class="trust-img" />
+          </div>
+
+          <!-- Bottom-right chat button -->
+          <div class="chat-cta">
+            <div class="chat-btn-wrapper">
+              <div class="chat-btn-border"></div>
+              <button class="chat-btn" @click="goChat">
+                <svg class="chat-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Chat with us
+              </button>
+            </div>
           </div>
 
         </div>
@@ -273,18 +318,16 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <!-- ══ AUTH MODAL ═══════════════════════════════════════════════════ -->
+    <AuthModal
+      v-model:open="showModal"
+      :initial-state="modalInitialState"
+    />
+
   </div>
 </template>
 
 <style scoped>
-/* ── Brand vars ──────────────────────────────────────────────────────────── */
-:root {
-  --gates-green: #4CAF50;
-  --charcoal: #2d2d2d;
-  --black: #1a1a1a;
-  --white: #ffffff;
-}
-
 /* ── Viewport lock ───────────────────────────────────────────────────────── */
 .viewport {
   width: 100vw;
@@ -369,7 +412,6 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* Selection handles */
 .handle {
   position: absolute;
   width: 7px;
@@ -383,7 +425,6 @@ onUnmounted(() => {
 .handle-bl { bottom: -4px; left: -4px; }
 .handle-br { bottom: -4px; right: -4px; }
 
-/* Typewriter cursor */
 .tw-cursor { font-weight: 300; animation: none; opacity: 1; }
 .tw-cursor.blink { animation: blink-anim 0.5s step-end infinite; }
 @keyframes blink-anim {
@@ -391,7 +432,6 @@ onUnmounted(() => {
   50% { opacity: 0; }
 }
 
-/* Fake cursor */
 .fake-cursor {
   position: fixed;
   z-index: 100;
@@ -407,12 +447,11 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transform: scale(0.95);
+  transform: scale(0.97);
   transition: opacity 0.5s ease, transform 0.5s ease;
   pointer-events: none;
-  background: transparent;
 }
-.phase2--in  { opacity: 1; transform: scale(1); pointer-events: auto; }
+.phase2--in     { opacity: 1; transform: scale(1); pointer-events: auto; }
 .phase2--visible { opacity: 1; transform: scale(1); pointer-events: auto; }
 
 .plate-perspective { width: 100%; height: 100%; perspective: 1200px; }
@@ -421,16 +460,71 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   position: relative;
-  background: transparent;
+  background: #f0f0f0;
   padding: 28px 32px;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d;
 }
 
-/* ── UI layer (parallax group) ───────────────────────────────────────────── */
+/* ── UI layer ────────────────────────────────────────────────────────────── */
 .ui-layer { position: absolute; inset: 0; z-index: 2; }
 
-/* ── Top-left taglines (hidden until phase2--visible entrance) ───────────── */
+/* ── Nav (hidden until phase2--visible entrance) ─────────────────────────── */
+.nav-menu {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  padding-bottom: 6px;
+  z-index: 5;
+  white-space: nowrap;
+  opacity: 0;
+}
+.phase2--visible .nav-menu {
+  animation: plv-nav-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s both;
+}
+@keyframes plv-nav-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.nav-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: #4CAF50;
+  transition: left 0.22s ease, width 0.22s ease;
+  pointer-events: none;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  font-family: 'Almarai', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #2d2d2d;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+}
+.nav-item:hover,
+.nav-item--active { color: #1a1a1a; }
+
+.nav-sep {
+  color: #2d2d2d;
+  opacity: 0.4;
+  font-size: 15px;
+  padding: 0 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Taglines ────────────────────────────────────────────────────────────── */
 .taglines {
   position: absolute;
   top: 72px;
@@ -442,9 +536,8 @@ onUnmounted(() => {
   filter: drop-shadow(0px 2px 8px rgba(0,0,0,0.12));
   opacity: 0;
 }
-
 .phase2--visible .taglines {
-  animation: plv-slide-top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s both;
+  animation: plv-slide-top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both;
 }
 
 .tagline-line {
@@ -456,12 +549,60 @@ onUnmounted(() => {
   margin: 0;
   line-height: 1.4;
 }
-
 .tagline-green { color: #4CAF50; }
 .tagline-link { color: #4CAF50; text-decoration: none; transition: opacity 0.2s; }
 .tagline-link:hover { opacity: 0.75; }
 
-/* ── Center logo with tilt ───────────────────────────────────────────────── */
+/* ── Auth buttons ────────────────────────────────────────────────────────── */
+.auth-buttons {
+  position: absolute;
+  top: 72px;
+  right: 64px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+}
+.phase2--visible .auth-buttons {
+  animation: plv-slide-top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  font-family: 'Almarai', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2d2d2d;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  padding: 8px 4px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  text-shadow: 0px 1px 4px rgba(0,0,0,0.15);
+}
+.btn-text:hover { color: #4CAF50; }
+
+.btn-pill {
+  background: #1a1a1a;
+  color: #ffffff;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-family: 'Almarai', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+  box-shadow: 0px 2px 12px rgba(0,0,0,0.18);
+}
+.btn-pill:hover { background: #a8e6a3; color: #1a1a1a; }
+.btn-pill:active { transform: scale(0.97); }
+
+/* ── Logo ────────────────────────────────────────────────────────────────── */
 .logo-center {
   position: absolute;
   inset: 0;
@@ -472,18 +613,8 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-.logo-shine-wrap {
-  position: relative;
-  display: inline-block;
-  line-height: 0;
-  border: none;
-  box-shadow: none;
-  overflow: visible;
-  transform: rotateX(var(--logo-rx, 0deg)) rotateY(var(--logo-ry, 0deg));
-  transform-style: preserve-3d;
-}
-
-/* Rim light — separate img so its filter never touches mix-blend-mode overlay */
+/* Rim light sits BEHIND logo-shine-wrap (DOM order = lower z).
+   Its filter:drop-shadow never touches the mix-blend-mode overlay inside logo-shine-wrap. */
 .logo-rim {
   position: absolute;
   width: 385px;
@@ -496,17 +627,24 @@ onUnmounted(() => {
   -webkit-user-drag: none;
   opacity: 0;
 }
-
 .phase2--visible .logo-rim {
   animation: logo-rim-light 2.6s ease-in-out both;
 }
-
 @keyframes logo-rim-light {
   0%   { opacity: 0; }
-  18%  { opacity: 1; filter: drop-shadow(0 0 6px rgba(76,175,80,0.2)); }
-  48%  { opacity: 1; filter: drop-shadow(0 0 22px rgba(76,175,80,0.55)) drop-shadow(0 0 9px rgba(180,225,185,0.45)); }
-  82%  { opacity: 1; filter: drop-shadow(0 0 6px rgba(76,175,80,0.2)); }
+  18%  { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
+  50%  { opacity: 1; filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)) drop-shadow(0 0 7px rgba(220,230,225,0.7)); }
+  82%  { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
   100% { opacity: 0; }
+}
+
+.logo-shine-wrap {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  overflow: visible;
+  transform: rotateX(var(--logo-rx, 0deg)) rotateY(var(--logo-ry, 0deg));
+  transform-style: preserve-3d;
 }
 
 .gates-logo {
@@ -536,7 +674,7 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* ── Bottom-left trust badge (hidden until phase2--visible entrance) ─────── */
+/* ── Trust badge ─────────────────────────────────────────────────────────── */
 .trust-badge {
   position: absolute;
   bottom: 64px;
@@ -544,9 +682,8 @@ onUnmounted(() => {
   z-index: 5;
   opacity: 0;
 }
-
 .phase2--visible .trust-badge {
-  animation: plv-slide-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.14s both;
+  animation: plv-slide-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.12s both;
 }
 
 .trust-img {
@@ -557,7 +694,62 @@ onUnmounted(() => {
   filter: drop-shadow(0px 2px 8px rgba(0,0,0,0.12));
 }
 
-/* ── Per-element entrance keyframes ──────────────────────────────────────── */
+/* ── Chat button ─────────────────────────────────────────────────────────── */
+.chat-cta {
+  position: absolute;
+  bottom: 64px;
+  right: 64px;
+  z-index: 5;
+  opacity: 0;
+}
+.phase2--visible .chat-cta {
+  animation: plv-slide-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.12s both;
+}
+
+.chat-btn-wrapper {
+  position: relative;
+  padding: 2px;
+  border-radius: 999px;
+  display: inline-block;
+  filter: drop-shadow(0px 2px 6px rgba(0,0,0,0.10));
+}
+
+.chat-btn-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  padding: 2px;
+  background: conic-gradient(from var(--angle), #4CAF50, #7B68EE, #00BFFF, #FF69B4, #4CAF50);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: spin-angle 3s linear infinite;
+}
+
+.chat-btn {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  color: #4CAF50;
+  font-family: 'Almarai', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.chat-btn:hover { background: #4CAF50; color: #ffffff; }
+.chat-icon { flex-shrink: 0; }
+
+/* ── Entrance keyframes ──────────────────────────────────────────────────── */
 @keyframes plv-slide-top {
   from { opacity: 0; transform: translateY(-20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -573,7 +765,9 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .plate-content { background: transparent; }
   .taglines { top: 32px; left: 24px; }
+  .auth-buttons { top: 32px; right: 24px; }
   .trust-badge { bottom: 32px; left: 24px; }
+  .chat-cta { bottom: 32px; right: 24px; }
   .trust-img { width: 180px; }
   .gates-logo { width: 280px; }
   .logo-rim { width: 280px; }

@@ -1,12 +1,11 @@
 <script setup>
-import { ref, provide, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AuthModal from '../components/AuthModal.vue'
 
-// ── Stationary visibility (hidden during PreLoginView intro) ──────────────
+// ── Stationary layer hidden on home (PreLoginView owns its own nav/buttons) ─
 const route = useRoute()
 const stationaryVisible = ref(route.path !== '/')
-provide('setStationaryVisible', (v) => { stationaryVisible.value = v })
 
 // ── Nav ───────────────────────────────────────────────────────────────────
 const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT']
