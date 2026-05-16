@@ -38,12 +38,13 @@ One sub-step per session. Do NOT combine steps.
 
 - ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created
 - ✅ **AuthModal** — 5-state glass modal built, wired into PreLoginView + PreAuthLayout
-- **3.5B** — Update router: PreAuthLayout as parent for `/`, nest PreLoginView as child. Commit.
-- **3.5C** — Move stationary elements (nav, LOG IN, SIGN UP, Chat with Us) from PreLoginView → PreAuthLayout. Remove duplicates. Commit.
-- **3.5D** — Small logo in PreAuthLayout (80px, hidden on `/`). Commit.
-- **3.5E** — Add placeholder views + routes (see TODO for updated spec). Commit.
-- **3.5F** — Page-slide transition. Commit.
-- **3.5G** — Small logo fade on route change. Commit.
+- ✅ **3.5B** — Router wired. PreAuthLayout is parent, PreLoginView is child.
+- **3.5C** ← NEXT — Remove duplicate nav/buttons/chat from PreLoginView (UI is currently doubled)
+- **3.5E** — Add WhyGatesView + ContactView placeholder pages + routes, wire nav clicks
+- **3.5F** — Page-slide transition (horizontal slide + fade)
+- **3.5D** — Small logo (needs routes to exist first)
+- **3.5G** — Small logo fade on route change
+- **3.5H** — Final visual check
 
 ## Known rollback lesson
 Step 3.5 was attempted all-at-once and rolled back. Key issue: `<Transition>` rejects multi-root components. Fix: `<Teleport to="body">` must be inside a single root `<div>`, not a sibling root node.

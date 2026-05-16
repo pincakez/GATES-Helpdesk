@@ -47,30 +47,28 @@
 > Key lesson: `<Transition>` rejects multi-root components — keep single root `<div>`, use `<Teleport to="body">` for modals.
 
 - ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created (nav, LOG IN/SIGN UP, Chat with Us, small logo placeholder, AuthModal wired)
+- ✅ **3.5B** — Router wired: PreAuthLayout is parent for `/`, PreLoginView is nested child
 
-- ⬜ **3.5B** — Update router: PreAuthLayout as parent for `/`, nest PreLoginView as child
+- ⬜ **3.5C** — Remove duplicate elements from PreLoginView ⚠️ DO THIS NEXT
+  - PreAuthLayout already has nav, LOG IN/SIGN UP, Chat with Us, AuthModal
+  - PreLoginView still has them too → UI is currently doubled (two navs, two button sets)
+  - Remove from PreLoginView: nav menu + indicator logic, LOG IN/SIGN UP buttons, Chat with Us button, AuthModal instance
+  - Keep in PreLoginView: Phase 1 intro, Phase 2 plate + logo + tilt, taglines, trust badge
 
-- ⬜ **3.5C** — Move stationary elements out of PreLoginView → into PreAuthLayout
-  - Move: LOG IN / SIGN UP buttons + AuthModal trigger
-  - Move: Chat with Us button
-  - Move: nav menu + indicator logic
-  - Remove duplicates from PreLoginView
+- ⬜ **3.5E** — Add placeholder views + routes
+  - `WhyGatesView.vue` — tilt plate page, no centered logo, no taglines. Route: `/why-gates`
+  - `ContactView.vue` — same as WhyGates. Route: `/contact`
+  - Wire nav clicks 1 + 2 (WHY GATES?, CONTACT US) to `router.push()` in PreAuthLayout
+  - YOUR WARRANTY AND SUPPORT already wired to AuthModal ✅
 
-- ⬜ **3.5D** — Small logo in PreAuthLayout
-  - `gates-logo.png` at 80px, top-left, absolute position
-  - Hidden when `route.path === '/'`, visible on all other pre-auth routes
-
-- ⬜ **3.5E** — Add placeholder views + routes (UPDATED SPEC)
-  - **Nav is 4 items:** HOME · WHY GATES? · CONTACT US · YOUR WARRANTY AND SUPPORT
-  - `WhyGatesView.vue` — tilt plate page, no centered logo, no taglines block. Route: `/why-gates`
-  - `ContactView.vue` — same design as WhyGates. Route: `/contact`
-  - **YOUR WARRANTY AND SUPPORT** — modal overlay triggered from nav (not a route). Opened same way as LOG IN button. Content TBD.
-  - Update nav items array in PreAuthLayout + PreLoginView
-
-- ⬜ **3.5F** — Page-slide transition (UPDATED SPEC)
-  - Transition: slide from left + fade, smooth ease-in-out (horizontal — matches AuthModal entrance)
+- ⬜ **3.5F** — Page-slide transition
+  - Transition: slide from left + fade, smooth ease-in-out (horizontal)
   - `<Transition name="page-slide">` wrapping `<router-view>` in PreAuthLayout
   - Stationary layer (nav, buttons, chat) must NOT move during transition
+
+- ⬜ **3.5D** — Small logo in PreAuthLayout (after routes exist)
+  - `gates-logo.png` at 80px, top-left, absolute position
+  - Hidden when `route.path === '/'`, visible on all other pre-auth routes
 
 - ⬜ **3.5G** — Small logo fade on route change
   - Navigating TO `/`: small logo fades out (handing off to large plate logo)
