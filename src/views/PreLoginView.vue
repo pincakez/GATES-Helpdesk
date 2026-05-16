@@ -245,6 +245,8 @@ onUnmounted(() => {
 
         <!-- Center logo with tilt and shine -->
         <div class="logo-center">
+          <!-- Rim light: separate from shine-wrap so filter doesn't break mix-blend-mode overlay -->
+          <img class="logo-rim" src="/assets/gates-logo.png" aria-hidden="true" />
           <div class="logo-shine-wrap" ref="logoTiltRef">
             <img src="/assets/gates-logo.png" alt="GATES Technology" class="gates-logo" />
             <div class="logo-overlay" ref="shineElRef"></div>
@@ -481,15 +483,30 @@ onUnmounted(() => {
   transform-style: preserve-3d;
 }
 
-/* Rim light: white/silver border glow sweeps in then fades when phase becomes visible */
-.phase2--visible .logo-shine-wrap {
-  animation: logo-rim-light 2.2s ease-in-out forwards;
+/* Rim light — separate img so its filter never touches mix-blend-mode overlay */
+.logo-rim {
+  position: absolute;
+  width: 385px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 0;
+}
+
+.phase2--visible .logo-rim {
+  animation: logo-rim-light 2.6s ease-in-out both;
 }
 
 @keyframes logo-rim-light {
-  0%   { filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
-  42%  { filter: drop-shadow(0 0 14px rgba(255,255,255,0.95)) drop-shadow(0 0 6px rgba(190,215,210,0.65)); }
-  100% { filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
+  0%   { opacity: 0; }
+  18%  { opacity: 1; filter: drop-shadow(0 0 6px rgba(76,175,80,0.2)); }
+  48%  { opacity: 1; filter: drop-shadow(0 0 22px rgba(76,175,80,0.55)) drop-shadow(0 0 9px rgba(180,225,185,0.45)); }
+  82%  { opacity: 1; filter: drop-shadow(0 0 6px rgba(76,175,80,0.2)); }
+  100% { opacity: 0; }
 }
 
 .gates-logo {
@@ -559,6 +576,7 @@ onUnmounted(() => {
   .trust-badge { bottom: 32px; left: 24px; }
   .trust-img { width: 180px; }
   .gates-logo { width: 280px; }
+  .logo-rim { width: 280px; }
   .intro-line1 { font-size: 28px; }
   .intro-box { height: 60px; }
   .intro-box-text { font-size: 22px; }
