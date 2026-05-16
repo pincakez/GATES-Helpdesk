@@ -11,8 +11,8 @@
 - ✅ Logo tilt + dynamic diagonal shine + sharp drop shadow (all driven by CSS vars)
 - ✅ Feature text, LOG IN / SIGN UP buttons, Trust Every Bit badge
 - ✅ Chat with Us button — rotating gradient border (`@property --angle`, `conic-gradient`)
-- ✅ Login/Register modal — Arabic RTL, Almarai font, two tabs, routes stub to `/app`
 - ✅ `useTilt.js` composable — ±3.5 deg plate, ±6 deg logo, lerp 0.065, leans TOWARD cursor
+- ✅ `useTilt.js` — `pauseAndCenter()` lerps plate to 0,0 on modal open; `resume()` resumes cursor tracking
 
 ---
 
@@ -21,35 +21,56 @@
 > One step = one session = one commit. Never combine steps.
 > Read every file you will touch before writing a single line.
 
+### ✅ AuthModal — `src/components/AuthModal.vue`
+
+5-state morphing glass modal. English for now — Arabic pass in a dedicated later session.
+
+- ✅ **Login state** — identifier + password, "New User?" → register, "Forgot your password?" → forgot
+- ✅ **Register state** — full name (English only), WhatsApp number, alt phone (optional), city dropdown (27 EG cities, default Port Said), email (optional). Morphs to Welcome on success.
+- ✅ **Forgot state** — EG phone input → Send OTP → 60s resend countdown timer → Verify → Reset
+- ✅ **Reset state** — new password + confirm, min 8 characters
+- ✅ **Welcome state** — congratulations message, language picker (Arabic default), "Access My Dashboard" button
+- ✅ Egyptian phone validation: `010/011/012/015` prefix, 11 digits, normalises `+20` / `0020` prefix
+- ✅ Phone carries from login → register/forgot only if valid; email optional but validated if filled
+- ✅ No outside-click dismiss — X button only
+- ✅ Plate lerps to center on open, resumes following cursor on close
+- ✅ Glass effect: `backdrop-filter: blur(22px)`, semi-transparent white, glass border
+- ✅ Entrance: slide from left + fade (matches page transition)
+- ✅ State morphing: `min-height` transition + directional slide between panels
+- ⬜ **Arabic language pass** — translate all strings, flip layout to RTL for Arabic mode
+
+---
+
 ### Step 3.5 — Pre-Auth Multi-Page Layout
+
 > ⚠️ Was attempted and rolled back. Must be done one sub-step per session.
 > Key lesson: `<Transition>` rejects multi-root components — keep single root `<div>`, use `<Teleport to="body">` for modals.
 
-- ⬜ **3.5A** — Create `src/layouts/PreAuthLayout.vue`
-  - Contains: nav menu, LOG IN, SIGN UP, Chat with Us, small logo placeholder
-  - Does NOT replace PreLoginView yet. Does NOT touch router yet. Just create the file.
+- ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created (nav, LOG IN/SIGN UP, Chat with Us, small logo placeholder, AuthModal wired)
 
-- ⬜ **3.5B** — Update router: PreAuthLayout as parent for `/`, nest PreLoginView under it
+- ⬜ **3.5B** — Update router: PreAuthLayout as parent for `/`, nest PreLoginView as child
 
 - ⬜ **3.5C** — Move stationary elements out of PreLoginView → into PreAuthLayout
-  - Move: LOG IN / SIGN UP buttons + modal trigger
+  - Move: LOG IN / SIGN UP buttons + AuthModal trigger
   - Move: Chat with Us button
-  - Move: nav menu
+  - Move: nav menu + indicator logic
   - Remove duplicates from PreLoginView
 
 - ⬜ **3.5D** — Small logo in PreAuthLayout
   - `gates-logo.png` at 80px, top-left, absolute position
   - Hidden when `route.path === '/'`, visible on all other pre-auth routes
 
-- ⬜ **3.5E** — Add 4 placeholder views + routes
-  - `WhyGatesView.vue`, `ContactView.vue`, `SupportView.vue`, `WarrantyView.vue`
-  - Each: centered heading + "المحتوى قيد الإعداد", transparent background
+- ⬜ **3.5E** — Add placeholder views + routes (UPDATED SPEC)
+  - **Nav is 4 items:** HOME · WHY GATES? · CONTACT US · YOUR WARRANTY AND SUPPORT
+  - `WhyGatesView.vue` — tilt plate page, no centered logo, no taglines block. Route: `/why-gates`
+  - `ContactView.vue` — same design as WhyGates. Route: `/contact`
+  - **YOUR WARRANTY AND SUPPORT** — modal overlay triggered from nav (not a route). Opened same way as LOG IN button. Content TBD.
+  - Update nav items array in PreAuthLayout + PreLoginView
 
-- ⬜ **3.5F** — Page-slide transition
-  - `<Transition name="page-slide">` wrapping `<router-view>`
-  - Leave: translateY(-40px) + opacity 0 — 350ms
-  - Enter: translateY(40px→0) + opacity 0→1 — 450ms
-  - Stationary layer must NOT move during transition
+- ⬜ **3.5F** — Page-slide transition (UPDATED SPEC)
+  - Transition: slide from left + fade, smooth ease-in-out (horizontal — matches AuthModal entrance)
+  - `<Transition name="page-slide">` wrapping `<router-view>` in PreAuthLayout
+  - Stationary layer (nav, buttons, chat) must NOT move during transition
 
 - ⬜ **3.5G** — Small logo fade on route change
   - Navigating TO `/`: small logo fades out (handing off to large plate logo)
@@ -177,7 +198,16 @@ Design reference: Claude.ai / Gemini UI — clean, no effects, functional.
 
 ---
 
-### Step 11 — Polish Pass
+### Step 11 — Arabic Language Pass
+
+- ⬜ Translate all AuthModal strings to Arabic
+- ⬜ Flip AuthModal layout to RTL when Arabic is selected
+- ⬜ Wire `selectedLang` from Welcome state to a Pinia store / localStorage
+- ⬜ All other pre-auth pages: Arabic text content
+
+---
+
+### Step 12 — Polish Pass
 
 - ⬜ Spacing consistency across all pages
 - ⬜ Typography hierarchy check
@@ -239,9 +269,9 @@ Design reference: Claude.ai / Gemini UI — clean, no effects, functional.
 
 ## Pending Design Decisions
 
-- [ ] Content for: Why Gates, Contact Us, Your Support, Your Warranty pages
+- [ ] Content for: WHY GATES? and CONTACT US pages (text, structure)
+- [ ] Content for: YOUR WARRANTY AND SUPPORT modal (fields, flow)
 - [ ] Sara persona photo — professional avatar asset needed
 - [ ] Real product images and SKUs for the 12+ products
 - [ ] Customer service phone number for sidebar/footer
 - [ ] Exact GATES green hex (currently `#4CAF50` — confirm with brand)
-- [ ] Pre-login secondary pages: same tilt+aluminum as home, or simpler variant?
