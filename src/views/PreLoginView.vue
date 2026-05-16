@@ -1,5 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, onActivated, nextTick, defineOptions } from 'vue'
+import { useRouter } from 'vue-router'
+
+defineOptions({ name: 'PreLoginView' })
 import { useTilt } from '../composables/useTilt.js'
 import AuthModal from '../components/AuthModal.vue'
 
@@ -32,7 +35,9 @@ const shineElRef = ref(null)
 let tilt = null
 
 // ── Nav ───────────────────────────────────────────────────────────────────
+const router = useRouter()
 const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT']
+const navRoutes = ['/', '/why-gates', '/contact', null]
 const navActiveIndex = ref(0)
 const navItemRefs = ref([])
 const navIndicatorStyle = ref({ left: '0px', width: '0px' })
@@ -46,6 +51,7 @@ function onNavLeave() { updateNavIndicator(navActiveIndex.value) }
 function onNavClick(i) {
   if (i === navItems.length - 1) { openModal('login'); return }
   navActiveIndex.value = i
+  router.push(navRoutes[i])
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────
@@ -182,6 +188,11 @@ onMounted(async () => {
   runIntro()
 })
 
+onActivated(() => {
+  navActiveIndex.value = 0
+  nextTick(() => updateNavIndicator(0))
+})
+
 onUnmounted(() => {
   if (cursorRafId) cancelAnimationFrame(cursorRafId)
   if (boxRafId) cancelAnimationFrame(boxRafId)
@@ -254,10 +265,12 @@ onUnmounted(() => {
       <div class="plate-perspective">
       <div class="plate-content" ref="plateTiltRef">
 
-        <!-- Center logo -->
+        <!-- Center logo — rim sits BEHIND shine-wrap so its filter never touches the overlay -->
         <div class="logo-center">
+          <img class="logo-rim" src="/assets/gates-logo.png" aria-hidden="true" />
           <div class="logo-shine-wrap" ref="logoTiltRef">
             <img src="/assets/gates-logo.png" alt="GATES Technology" class="gates-logo" />
+            <div class="logo-overlay" ref="shineElRef"></div>
           </div>
         </div>
 
@@ -611,6 +624,30 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+/* Rim — separate element so its filter never breaks the overlay's mix-blend-mode */
+.logo-rim {
+  position: absolute;
+  width: 385px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 0;
+}
+.phase2--visible .logo-rim {
+  animation: logo-rim-light 2.6s ease-in-out both;
+}
+@keyframes logo-rim-light {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; filter: drop-shadow(0 0 6px rgba(60,60,60,0.30)); }
+  50%  { opacity: 1; filter: drop-shadow(0 0 24px rgba(40,40,40,0.55)) drop-shadow(0 0 10px rgba(80,80,80,0.45)); }
+  82%  { opacity: 1; filter: drop-shadow(0 0 6px rgba(60,60,60,0.30)); }
+  100% { opacity: 0; }
+}
+
 .logo-shine-wrap {
   position: relative;
   display: inline-block;
@@ -625,6 +662,25 @@ onUnmounted(() => {
   user-select: none;
   -webkit-user-drag: none;
   filter: drop-shadow(var(--logo-shadow-x, 0px) var(--logo-shadow-y, 8px) 8px rgba(0,0,0,0.45));
+}
+
+.logo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--shine-angle, 148deg),
+    rgba(0,0,0,0.20) 0%,
+    rgba(0,0,0,0.05) 30%,
+    rgba(255,255,255,0.80) 50%,
+    rgba(0,0,0,0.05) 70%,
+    rgba(0,0,0,0.20) 100%
+  );
+  -webkit-mask-image: url('/assets/gates-logo.png');
+  mask-image: url('/assets/gates-logo.png');
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
 }
 
 /* ── Trust badge ─────────────────────────────────────────────────────────── */
@@ -722,6 +778,7 @@ onUnmounted(() => {
   .chat-cta { bottom: 32px; right: 24px; }
   .trust-img { width: 180px; }
   .gates-logo { width: 280px; }
+  .logo-rim { width: 280px; }
   .intro-line1 { font-size: 28px; }
   .intro-box { height: 60px; }
   .intro-box-text { font-size: 22px; }

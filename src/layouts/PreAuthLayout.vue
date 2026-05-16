@@ -1,14 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AuthModal from '../components/AuthModal.vue'
 
 // ── Stationary layer hidden on home (PreLoginView owns its own nav/buttons) ─
 const route = useRoute()
-const stationaryVisible = ref(route.path !== '/')
+const router = useRouter()
+const stationaryVisible = computed(() => route.path !== '/')
 
 // ── Nav ───────────────────────────────────────────────────────────────────
 const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT']
+const navRoutes = ['/', '/why-gates', '/contact', null]
 const navActiveIndex = ref(0)
 const navItemRefs = ref([])
 const navIndicatorStyle = ref({ left: '0px', width: '0px' })
@@ -22,7 +24,13 @@ function onNavLeave() { updateNavIndicator(navActiveIndex.value) }
 function onNavClick(i) {
   if (i === navItems.length - 1) { openModal('login'); return }
   navActiveIndex.value = i
+  router.push(navRoutes[i])
 }
+
+watch(() => route.path, () => {
+  const idx = navRoutes.indexOf(route.path)
+  if (idx !== -1) { navActiveIndex.value = idx; updateNavIndicator(idx) }
+})
 
 onMounted(() => { updateNavIndicator(0) })
 
@@ -38,7 +46,11 @@ function goChat() { window.location.href = '/chat' }
   <div class="pre-auth-layout" dir="ltr">
 
     <!-- Page content -->
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <keep-alive include="PreLoginView">
+        <component :is="Component" />
+      </keep-alive>
+    </router-view>
 
     <!-- ── Stationary overlay layer ──────────────────────────────────────── -->
     <div class="stationary-layer" :class="{ 'stationary-layer--hidden': !stationaryVisible }">
@@ -112,6 +124,7 @@ function goChat() { window.location.href = '/chat' }
   height: 100vh;
   overflow: hidden;
   position: fixed;
+  background: #ffffff;
   inset: 0;
   font-family: 'Almarai', sans-serif;
   direction: ltr;
