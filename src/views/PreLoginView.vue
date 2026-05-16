@@ -1,10 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import { useTilt } from '../composables/useTilt.js'
-import AuthModal from '../components/AuthModal.vue'
 
 // ── Phase state ───────────────────────────────────────────────────────────
-// phase: 'intro' | 'transition' | 'main'
 const phase = ref('intro')
 
 // ── Phase 1 typewriter state ──────────────────────────────────────────────
@@ -14,7 +12,7 @@ const showLine1Cursor = ref(false)
 const showLine2Cursor = ref(false)
 const line1CursorBlink = ref(false)
 const line2CursorBlink = ref(false)
-const boxWidth = ref(0)        // px
+const boxWidth = ref(0)
 const introMeasureRef = ref(null)
 const boxVisible = ref(false)
 const handlesVisible = ref(true)
@@ -32,32 +30,9 @@ const logoTiltRef = ref(null)
 const shineElRef = ref(null)
 let tilt = null
 
-// ── Nav ───────────────────────────────────────────────────────────────────
-const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT']
-const navActiveIndex = ref(0)
-const navItemRefs = ref([])
-const navIndicatorStyle = ref({ left: '0px', width: '0px' })
-function updateNavIndicator(idx) {
-  const el = navItemRefs.value[idx]
-  if (!el) return
-  navIndicatorStyle.value = { left: el.offsetLeft + 'px', width: el.offsetWidth + 'px' }
-}
-function onNavEnter(i) { updateNavIndicator(i) }
-function onNavLeave() { updateNavIndicator(navActiveIndex.value) }
-function onNavClick(i) {
-  if (i === navItems.length - 1) { openModal('login'); return }
-  navActiveIndex.value = i
-}
-
-// ── Modal ─────────────────────────────────────────────────────────────────
-const showModal = ref(false)
-const modalInitialState = ref('login')
-
-function openModal(tab = 'login') {
-  modalInitialState.value = tab
-  showModal.value = true
-}
-function goChat() { tilt?.resume(); window.location.href = '/chat' }
+// ── Stationary layer control (PreAuthLayout) ──────────────────────────────
+const setStationaryVisible = inject('setStationaryVisible', null)
+setStationaryVisible?.(false) // hide nav/buttons/chat during intro
 
 // ── Sleep helper ──────────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
@@ -72,16 +47,13 @@ async function runIntro() {
   fakeCursorVisible.value = true
   fakeCursorMode.value = 'arrow'
 
-  // Animate cursor toward left edge of where box will be
   const boxLeft = window.innerWidth * 0.12 + 8
   const boxCursorY = window.innerHeight * 0.5 - 8
   await animateCursor(fakeCursorX.value, fakeCursorY.value, boxLeft, boxCursorY, 600)
 
-  // 2. Cursor → crosshair
   fakeCursorMode.value = 'crosshair'
   await sleep(200)
 
-  // 3. Box and cursor draw together in one rAF loop
   boxVisible.value = true
   handlesVisible.value = true
   handlesOpacity.value = 1
@@ -92,18 +64,14 @@ async function runIntro() {
     : Math.round(window.innerWidth * 0.55)
   await animateBoxDraw(boxLeft, boxCursorY, targetBoxWidthPx, 600)
 
-  // Cursor pauses at right edge before releasing
   await sleep(300)
 
-  // 4. Cursor releases and exits
   fakeCursorMode.value = 'arrow'
   await animateCursor(fakeCursorX.value, fakeCursorY.value, window.innerWidth + 80, fakeCursorY.value - 40, 400)
   fakeCursorVisible.value = false
 
-  // 5. Handles fade out (slow)
   fadeOutHandles()
 
-  // 6. Typewriter line 1
   showLine1Cursor.value = true
   await typeText(line1Text, 'GATES TECHNOLOGY', 80)
   line1CursorBlink.value = true
@@ -112,39 +80,31 @@ async function runIntro() {
   showLine1Cursor.value = false
   await sleep(100)
 
-  // 7. Typewriter line 2 — typo SERVUCE, backspace UCE, retype ICE
   showLine2Cursor.value = true
   await typeText(line2Text, 'AT YOUR SERVUCE', 80)
   line2CursorBlink.value = true
   await sleep(800)
   line2CursorBlink.value = false
-  await backspace(line2Text, 3, 150)   // delete E, C, U
+  await backspace(line2Text, 3, 150)
   await sleep(400)
   await typeText(line2Text, 'ICE', 120)
   line2CursorBlink.value = true
-  await sleep(1500)                    // ~3 visible blinks
+  await sleep(1500)
   line2CursorBlink.value = false
   showLine2Cursor.value = false
   await sleep(800)
 
-  // 8. Phase transition
   phase.value = 'transition'
   await sleep(500)
   phase.value = 'main'
+  setStationaryVisible?.(true) // trigger entrance animation for nav/buttons/chat
 }
 
 async function typeText(textRef, str, delay) {
-  for (const ch of str) {
-    textRef.value += ch
-    await sleep(delay)
-  }
+  for (const ch of str) { textRef.value += ch; await sleep(delay) }
 }
-
 async function backspace(textRef, count, delay) {
-  for (let i = 0; i < count; i++) {
-    textRef.value = textRef.value.slice(0, -1)
-    await sleep(delay)
-  }
+  for (let i = 0; i < count; i++) { textRef.value = textRef.value.slice(0, -1); await sleep(delay) }
 }
 
 let cursorRafId = null
@@ -153,12 +113,10 @@ function animateCursor(x0, y0, x1, y1, duration) {
     const start = performance.now()
     function step(now) {
       const t = Math.min((now - start) / duration, 1)
-      // ease-out cubic
       const e = 1 - Math.pow(1 - t, 3)
       fakeCursorX.value = x0 + (x1 - x0) * e
       fakeCursorY.value = y0 + (y1 - y0) * e
-      if (t < 1) { cursorRafId = requestAnimationFrame(step) }
-      else resolve()
+      if (t < 1) { cursorRafId = requestAnimationFrame(step) } else resolve()
     }
     cursorRafId = requestAnimationFrame(step)
   })
@@ -174,8 +132,7 @@ function animateBoxDraw(boxStartX, cursorY, targetWidthPx, duration) {
       boxWidth.value = Math.round(e * targetWidthPx)
       fakeCursorX.value = boxStartX + boxWidth.value
       fakeCursorY.value = cursorY
-      if (t < 1) { boxRafId = requestAnimationFrame(step) }
-      else resolve()
+      if (t < 1) { boxRafId = requestAnimationFrame(step) } else resolve()
     }
     boxRafId = requestAnimationFrame(step)
   })
@@ -194,22 +151,26 @@ function fadeOutHandles() {
   handlesRafId = requestAnimationFrame(step)
 }
 
+// ── Tilt pause/resume via window events (fired by AuthModal) ──────────────
+const onTiltPause = () => tilt?.pauseAndCenter()
+const onTiltResume = () => tilt?.resume()
+
 onMounted(async () => {
   await nextTick()
   tilt = useTilt({ plateEl: plateTiltRef, logoEl: logoTiltRef, shineEl: shineElRef })
   tilt.start()
-  updateNavIndicator(0)
+  window.addEventListener('auth-modal-open', onTiltPause)
+  window.addEventListener('auth-modal-close', onTiltResume)
   runIntro()
 })
-
-function onTiltPause() { tilt?.pauseAndCenter() }
-function onTiltResume() { tilt?.resume() }
 
 onUnmounted(() => {
   if (cursorRafId) cancelAnimationFrame(cursorRafId)
   if (boxRafId) cancelAnimationFrame(boxRafId)
   if (handlesRafId) cancelAnimationFrame(handlesRafId)
   tilt?.stop()
+  window.removeEventListener('auth-modal-open', onTiltPause)
+  window.removeEventListener('auth-modal-close', onTiltResume)
 })
 </script>
 
@@ -235,16 +196,11 @@ onUnmounted(() => {
         <span ref="introMeasureRef" class="intro-measure" aria-hidden="true">AT YOUR SERVICE</span>
 
         <!-- Line 2: green box with AT YOUR SERVICE -->
-        <div
-          class="intro-box-wrap"
-          :style="{ opacity: boxVisible ? 1 : 0 }"
-        >
+        <div class="intro-box-wrap" :style="{ opacity: boxVisible ? 1 : 0 }">
           <div class="intro-box" :style="{ width: boxWidth + 'px' }">
             <span class="intro-box-text">
               {{ line2Text }}<span v-if="showLine2Cursor" class="tw-cursor" :class="{ blink: line2CursorBlink }">|</span>
             </span>
-
-            <!-- Transform handles -->
             <template v-if="handlesVisible">
               <span class="handle handle-tl" :style="{ opacity: handlesOpacity }" />
               <span class="handle handle-tr" :style="{ opacity: handlesOpacity }" />
@@ -298,22 +254,6 @@ onUnmounted(() => {
         <!-- UI layer -->
         <div class="ui-layer">
 
-          <!-- Top-center nav -->
-          <nav class="nav-menu">
-            <div class="nav-indicator" :style="navIndicatorStyle"></div>
-            <template v-for="(item, i) in navItems" :key="item">
-              <button
-                class="nav-item"
-                :class="{ 'nav-item--active': navActiveIndex === i }"
-                :ref="el => { if (el) navItemRefs[i] = el }"
-                @mouseenter="onNavEnter(i)"
-                @mouseleave="onNavLeave"
-                @click="onNavClick(i)"
-              >{{ item }}</button>
-              <span v-if="i < navItems.length - 1" class="nav-sep" aria-hidden="true">-</span>
-            </template>
-          </nav>
-
           <!-- Top-left taglines -->
           <div class="taglines">
             <p class="tagline-line">|GET FREE LIVE TECHNICAL SUPPORT</p>
@@ -321,42 +261,15 @@ onUnmounted(() => {
             <p class="tagline-line">EARN <RouterLink to="/offers" class="tagline-green tagline-link">[POINTS]</RouterLink> EVERY DAY</p>
           </div>
 
-          <!-- Top-right auth buttons -->
-          <div class="auth-buttons">
-            <button class="btn-text" @click="openModal('login')">LOG IN</button>
-            <button class="btn-pill" @click="openModal('register')">SIGN UP</button>
-          </div>
-
           <!-- Bottom-left trust badge -->
           <div class="trust-badge">
             <img src="/assets/trust-every-bit.png" alt="Trust Every Bit" class="trust-img" />
-          </div>
-
-          <!-- Bottom chat button -->
-          <div class="chat-cta">
-            <div class="chat-btn-wrapper">
-              <div class="chat-btn-border"></div>
-              <button class="chat-btn" @click="goChat">
-                <svg class="chat-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-                Chat with us
-              </button>
-            </div>
           </div>
 
         </div>
       </div>
       </div>
     </div>
-
-    <!-- ══ AUTH MODAL ═══════════════════════════════════════════════════ -->
-    <AuthModal
-      v-model:open="showModal"
-      :initial-state="modalInitialState"
-      @tilt-pause="onTiltPause"
-      @tilt-resume="onTiltResume"
-    />
 
   </div>
 </template>
@@ -431,9 +344,7 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.intro-box-wrap {
-  transition: opacity 0.15s;
-}
+.intro-box-wrap { transition: opacity 0.15s; }
 
 .intro-box {
   position: relative;
@@ -471,14 +382,8 @@ onUnmounted(() => {
 .handle-br { bottom: -4px; right: -4px; }
 
 /* Typewriter cursor */
-.tw-cursor {
-  font-weight: 300;
-  animation: none;
-  opacity: 1;
-}
-.tw-cursor.blink {
-  animation: blink-anim 0.5s step-end infinite;
-}
+.tw-cursor { font-weight: 300; animation: none; opacity: 1; }
+.tw-cursor.blink { animation: blink-anim 0.5s step-end infinite; }
 @keyframes blink-anim {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -491,9 +396,7 @@ onUnmounted(() => {
   pointer-events: none;
   transform: translate(-2px, -2px);
 }
-.fake-cursor--crosshair {
-  transform: translate(-11px, -11px);
-}
+.fake-cursor--crosshair { transform: translate(-11px, -11px); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    PHASE 2
@@ -507,22 +410,10 @@ onUnmounted(() => {
   pointer-events: none;
   background: transparent;
 }
-.phase2--in {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-.phase2--visible {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
+.phase2--in  { opacity: 1; transform: scale(1); pointer-events: auto; }
+.phase2--visible { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-.plate-perspective {
-  width: 100%;
-  height: 100%;
-  perspective: 1200px;
-}
+.plate-perspective { width: 100%; height: 100%; perspective: 1200px; }
 
 .plate-content {
   width: 100%;
@@ -535,61 +426,9 @@ onUnmounted(() => {
 }
 
 /* ── UI layer (parallax group) ───────────────────────────────────────────── */
-.ui-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
+.ui-layer { position: absolute; inset: 0; z-index: 2; }
 
-/* ── Top-center nav ──────────────────────────────────────────────────────── */
-.nav-menu {
-  position: absolute;
-  top: 72px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  padding-bottom: 6px;
-  z-index: 5;
-  white-space: nowrap;
-}
-
-.nav-indicator {
-  position: absolute;
-  bottom: 0;
-  height: 2px;
-  background: #4CAF50;
-  transition: left 0.22s ease, width 0.22s ease;
-  pointer-events: none;
-}
-
-.nav-item {
-  background: none;
-  border: none;
-  font-family: 'Almarai', sans-serif;
-  font-size: 15px;
-  font-weight: 400;
-  color: #2d2d2d;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  padding: 2px 6px;
-  transition: color 0.15s;
-}
-
-.nav-item:hover,
-.nav-item--active { color: #1a1a1a; }
-
-.nav-sep {
-  color: #2d2d2d;
-  opacity: 0.4;
-  font-size: 15px;
-  padding: 0 2px;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* ── Top-left taglines ───────────────────────────────────────────────────── */
+/* ── Top-left taglines (hidden until phase2--visible entrance) ───────────── */
 .taglines {
   position: absolute;
   top: 72px;
@@ -599,6 +438,11 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 5px;
   filter: drop-shadow(0px 2px 8px rgba(0,0,0,0.12));
+  opacity: 0;
+}
+
+.phase2--visible .taglines {
+  animation: plv-slide-top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s both;
 }
 
 .tagline-line {
@@ -612,58 +456,8 @@ onUnmounted(() => {
 }
 
 .tagline-green { color: #4CAF50; }
-
-.tagline-link {
-  color: #4CAF50;
-  text-decoration: none;
-  transition: opacity 0.2s;
-}
+.tagline-link { color: #4CAF50; text-decoration: none; transition: opacity 0.2s; }
 .tagline-link:hover { opacity: 0.75; }
-
-/* ── Top-right auth buttons ──────────────────────────────────────────────── */
-.auth-buttons {
-  position: absolute;
-  top: 72px;
-  right: 64px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.btn-text {
-  background: none;
-  border: none;
-  font-family: 'Almarai', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #2d2d2d;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  padding: 8px 4px;
-  text-transform: uppercase;
-  transition: color 0.2s;
-  text-shadow: 0px 1px 4px rgba(0,0,0,0.15);
-}
-.btn-text:hover { color: #4CAF50; }
-
-.btn-pill {
-  background: #1a1a1a;
-  color: #ffffff;
-  border: none;
-  border-radius: 50px;
-  padding: 10px 24px;
-  font-family: 'Almarai', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: background 0.2s, color 0.2s, transform 0.1s;
-  box-shadow: 0px 2px 12px rgba(0,0,0,0.18);
-}
-.btn-pill:hover { background: #a8e6a3; color: #1a1a1a; }
-.btn-pill:active { transform: scale(0.97); }
 
 /* ── Center logo with tilt ───────────────────────────────────────────────── */
 .logo-center {
@@ -685,6 +479,17 @@ onUnmounted(() => {
   overflow: visible;
   transform: rotateX(var(--logo-rx, 0deg)) rotateY(var(--logo-ry, 0deg));
   transform-style: preserve-3d;
+}
+
+/* Rim light: white/silver border glow sweeps in then fades when phase becomes visible */
+.phase2--visible .logo-shine-wrap {
+  animation: logo-rim-light 2.2s ease-in-out forwards;
+}
+
+@keyframes logo-rim-light {
+  0%   { filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
+  42%  { filter: drop-shadow(0 0 14px rgba(255,255,255,0.95)) drop-shadow(0 0 6px rgba(190,215,210,0.65)); }
+  100% { filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
 }
 
 .gates-logo {
@@ -714,12 +519,17 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* ── Bottom-left trust badge ─────────────────────────────────────────────── */
+/* ── Bottom-left trust badge (hidden until phase2--visible entrance) ─────── */
 .trust-badge {
   position: absolute;
   bottom: 64px;
   left: 64px;
   z-index: 5;
+  opacity: 0;
+}
+
+.phase2--visible .trust-badge {
+  animation: plv-slide-bottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.14s both;
 }
 
 .trust-img {
@@ -730,87 +540,25 @@ onUnmounted(() => {
   filter: drop-shadow(0px 2px 8px rgba(0,0,0,0.12));
 }
 
-/* ── Bottom chat button ──────────────────────────────────────────────────── */
-.chat-cta {
-  position: absolute;
-  bottom: 64px;
-  right: 64px;
-  z-index: 5;
+/* ── Per-element entrance keyframes ──────────────────────────────────────── */
+@keyframes plv-slide-top {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
-@property --angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
+@keyframes plv-slide-bottom {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes spin-angle {
-  to { --angle: 360deg; }
-}
-
-.chat-btn-wrapper {
-  position: relative;
-  padding: 2px;
-  border-radius: 999px;
-  display: inline-block;
-  filter: drop-shadow(0px 2px 6px rgba(0,0,0,0.10));
-}
-
-.chat-btn-border {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  padding: 2px;
-  background: conic-gradient(from var(--angle), #4CAF50, #7B68EE, #00BFFF, #FF69B4, #4CAF50);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  animation: spin-angle 3s linear infinite;
-}
-
-.chat-btn {
-  position: relative;
-  z-index: 1;
-  background: transparent;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 20px;
-  color: #4CAF50;
-  font-family: 'Almarai', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.2s, color 0.2s;
-}
-
-.chat-btn:hover {
-  background: #4CAF50;
-  color: #ffffff;
-}
-
-.chat-icon { flex-shrink: 0; }
-
 
 /* ══════════════════════════════════════════════════════════════════════════
    MOBILE
 ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .plate-content { background: transparent; }
-
   .taglines { top: 32px; left: 24px; }
-  .auth-buttons { top: 32px; right: 24px; }
   .trust-badge { bottom: 32px; left: 24px; }
-  .chat-cta { bottom: 32px; right: 24px; }
-
   .trust-img { width: 180px; }
   .gates-logo { width: 280px; }
-
   .intro-line1 { font-size: 28px; }
   .intro-box { height: 60px; }
   .intro-box-text { font-size: 22px; }

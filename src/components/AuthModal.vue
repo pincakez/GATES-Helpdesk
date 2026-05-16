@@ -6,7 +6,7 @@ const props = defineProps({
   open: Boolean,
   initialState: { type: String, default: 'login' }
 })
-const emit = defineEmits(['update:open', 'tilt-pause', 'tilt-resume'])
+const emit = defineEmits(['update:open'])
 
 const router = useRouter()
 
@@ -145,7 +145,7 @@ function accessDashboard() { close(); router.push('/app') }
 watch(() => props.open, (val) => {
   if (val) {
     state.value = props.initialState
-    emit('tilt-pause')
+    window.dispatchEvent(new CustomEvent('auth-modal-open'))
   } else {
     otpSent.value = false
     otpTimer.value = 0
@@ -155,7 +155,7 @@ watch(() => props.open, (val) => {
     sharedPhoneError.value = ''
     regAltPhoneError.value = ''
     regEmailError.value = ''
-    emit('tilt-resume')
+    window.dispatchEvent(new CustomEvent('auth-modal-close'))
   }
 })
 

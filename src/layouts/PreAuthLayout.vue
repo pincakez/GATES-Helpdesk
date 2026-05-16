@@ -1,6 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, provide, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AuthModal from '../components/AuthModal.vue'
+
+// ── Stationary visibility (hidden during PreLoginView intro) ──────────────
+const route = useRoute()
+const stationaryVisible = ref(route.path !== '/')
+provide('setStationaryVisible', (v) => { stationaryVisible.value = v })
 
 // ── Nav ───────────────────────────────────────────────────────────────────
 const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT']
@@ -36,7 +42,7 @@ function goChat() { window.location.href = '/chat' }
     <router-view />
 
     <!-- ── Stationary overlay layer ──────────────────────────────────────── -->
-    <div class="stationary-layer">
+    <div class="stationary-layer" :class="{ 'stationary-layer--hidden': !stationaryVisible }">
 
       <!-- Small logo placeholder — image + show/hide wired in 3.5D -->
       <div class="small-logo"></div>
@@ -83,7 +89,6 @@ function goChat() { window.location.href = '/chat' }
       v-model:open="showModal"
       :initial-state="modalInitialState"
     />
-
 
   </div>
 </template>
@@ -136,12 +141,19 @@ function goChat() { window.location.href = '/chat' }
   position: absolute;
   top: 72px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(0);
   display: flex;
   align-items: center;
   padding-bottom: 6px;
   white-space: nowrap;
   pointer-events: auto;
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.stationary-layer--hidden .nav-menu {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-22px);
+  pointer-events: none;
 }
 
 .nav-indicator {
@@ -187,6 +199,13 @@ function goChat() { window.location.href = '/chat' }
   align-items: center;
   gap: 12px;
   pointer-events: auto;
+  transition: opacity 0.45s ease 0.08s, transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s;
+}
+
+.stationary-layer--hidden .auth-buttons {
+  opacity: 0;
+  transform: translateY(-22px);
+  pointer-events: none;
 }
 
 .btn-text {
@@ -229,6 +248,13 @@ function goChat() { window.location.href = '/chat' }
   bottom: 64px;
   right: 64px;
   pointer-events: auto;
+  transition: opacity 0.45s ease 0.14s, transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.14s;
+}
+
+.stationary-layer--hidden .chat-cta {
+  opacity: 0;
+  transform: translateY(22px);
+  pointer-events: none;
 }
 
 .chat-btn-wrapper {
