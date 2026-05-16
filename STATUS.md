@@ -4,112 +4,76 @@
 
 ---
 
-## Current state: Phase 1 frontend — App Shell built, pre-auth routes stable
+## Current state
+
+**Phase 1 — Customer frontend** is in active development. Pre-login + app shell complete. Real chat UI + Gemini integration + admin panel still ahead.
+
+The admin panel concept (uploaded in `/admin`) has been audited. All features approved with edits — folded into the remastered TODO.md.
 
 ---
 
-## Pre-login (Phase 0 — COMPLETE ✅)
+## ✅ Completed
 
-- Phase 1 intro: fake cursor → green box → typewriter with typo correction
-- Phase 2: white background, logo with dynamic shine + drop shadow, perspective tilt toward cursor
-- `useTilt.js`: ±3.5° plate, ±6° logo, lerp 0.065, leans TOWARD cursor
-- `pauseAndCenter()` / `resume()` wired to AuthModal open/close via window custom events
+### Phase 0 — Pre-Login Page
+- Two-phase intro animation (typewriter + tilt)
+- `useTilt.js` plate + logo tilt with pause/resume
 
-**Committed:** `stable v3` (d90b022), `stable v4` (ce8b6ad)
+### Phase 1 — Customer Frontend (partial)
+- AuthModal (5-state glass modal, English)
+- PreAuthLayout + WhyGatesView + ContactView (Steps 3.5A–3.5E)
+- AppShellLayout (Steps 4A–4E): sidebar (collapsible, lucide icons) + topbar (search + profile + sign-out modal) + Sara chat panel (480px, always visible)
+- KeepAlive so home intro doesn't replay
+- Inter font for shell, Almarai for Arabic chat content
+- `lucide-vue-next` integrated
 
----
-
-## Pre-auth layout (Steps 3.5A–3.5E — COMPLETE ✅)
-
-- `PreAuthLayout.vue` — stationary overlay (nav + auth buttons + chat CTA) shown on non-home routes
-- Router: PreAuthLayout parent, PreLoginView / WhyGatesView / ContactView as children
-- `<KeepAlive include="PreLoginView">` — home intro does not replay on back-navigation
-- Entrance animations: nav/buttons slide from top, taglines/trust badge slide from bottom
-- `WhyGatesView` + `ContactView`: tilt plate pages, nav wired to `router.push()`
-- Active nav indicator syncs on `onActivated` (KeepAlive hook)
-
-**Still pending in pre-auth:**
-- ⬜ 3.5F — Page-slide transition (horizontal slide + fade on `<router-view>`)
-- ⬜ 3.5D — Small logo in PreAuthLayout top-left (hidden on `/`, visible on other routes)
-- ⬜ 3.5G — Small logo fade on route change
-- ⬜ 3.5H — Final visual check
+**Committed:** `stable v5` (b19ffee)
 
 ---
 
-## AuthModal (COMPLETE ✅)
+## 🔄 In Progress / Up Next
 
-5-state glass modal: login → register → forgot → reset → welcome.
-English strings. Arabic pass is a future dedicated session.
-"Access My Dashboard" → `router.push('/app')`.
+1. **Pre-auth polish** — 3.5F (page-slide transition), 3.5D/G (small logo)
+2. **Step 5** — Real chat UI (ChatView, bubbles, Sara header, thinking indicator, comparison table)
+3. **Step 6** — Gemini service via `aiClient.js` (provider-aware: Gemini default, Claude/OpenAI/Local LLM swappable)
+4. **Step 7** — Product data + function calling
+5. **Step 8** — Ticket submission
+6. **Steps 9–12** — Status banner · toast · Arabic pass · polish
+7. **Phase 2** — Admin panel frontend (18 sub-steps, dark theme, separate /admin URL)
 
----
-
-## App Shell (Steps 4A–4E — COMPLETE ✅)
-
-`src/layouts/AppShellLayout.vue`
-
-**Topbar:**
-- Search bar (left)
-- My Profile link with User icon + label (right)
-- Sign Out button with confirmation modal
-- User avatar initials (right)
-
-**Left sidebar:**
-- Lucide icons: Ticket, MessageCircle, Mail, Tag, Shield, Star, Gift
-- Centered nav items (justify-content: center)
-- Collapses to 62px icons-only: toggle at bottom with ChevronsLeft / ChevronsRight
-- "G" mini placeholder shown when collapsed (real asset pending)
-- Auto-collapses at < 1100px via CSS, hidden at < 768px (hamburger drawer)
-- My Profile removed from sidebar — lives in topbar
-- No hover color change on active item
-
-**Right Sara chat panel (480px):**
-- Sara header: gradient avatar, online dot, name + Arabic subtitle
-- Chat messages: Arabic AI bubbles (left) + user bubbles (right, green)
-- Thinking indicator: animated CSS dots
-- Input: Arabic placeholder, dir="auto", Enter to send
-- Always visible — not hidden at any breakpoint (essential feature)
-- Box shadow on left edge separates from main content
-
-**Font:** Inter (app shell UI) · Almarai (chat bubbles, Arabic text)
-**Icons:** `lucide-vue-next`
-
-**Routes under `/app`:**
-tickets · live-chat · inbox · offers · warranty · loyalty · benefits · profile
-All currently show stub views (page name centered). Real views = Step 5+.
+See TODO.md for the full remastered roadmap.
 
 ---
 
-## Next steps (in order)
+## Admin Panel Audit — Key Decisions Made
 
-1. ⬜ Admin panel concept review (concept uploaded, pending audit for Redis/infra requirements)
-2. ⬜ 3.5F — Pre-auth page-slide transition
-3. ⬜ 3.5D/G — Small logo in PreAuthLayout with fade on route change
-4. ⬜ Arabic language pass — AuthModal full RTL translation
-5. ⬜ Step 5 — Chat UI (real views: ChatView, bubbles, Sara header, comparison tables)
-6. ⬜ Step 6 — Gemini API integration
-7. ⬜ Step 7 — Product data + function calling
-8. ⬜ Step 8 — Ticket submission
-9. ⬜ Step 9 — System status banner
-10. ⬜ Step 10 — Toast component
-11. ⬜ Step 11 — Arabic language pass (all views)
-12. ⬜ Step 12 — Polish pass
+- **Auth:** separate `/admin` URL (email + password + 2FA), not the customer login
+- **Theme:** dark, serious control-panel feel
+- **AI provider:** Gemini default, but UI supports pluggable Claude / OpenAI / Local LLM with auto-refreshing model lists (daily cron pulls each provider's list-models endpoint)
+- **Per-tier AI configs:** Premium / Silver / Standard each get: model, max input/output tokens, allowed media types (text/images/voice/video/docs), file size limit, reasoning depth, escalation priority
+- **Local LLM placeholder:** dormant card in AI Rules UI (endpoint + model name fields), reserved for future GATES-server deployment
+- **WhatsApp broadcasting:** template picker only (NOT free text), pre-approved templates required outside 24h customer-service window
+- **Facebook integration:** AI agents DO handle inbound FB Messenger messages. FB removed only as a destination for admin alerts (use WhatsApp + in-app)
+- **WebRTC remote (Chrome ext):** approved with explicit first-run consent splash, consent record persisted server-side with audit trail
+- **`issue_refund` function:** permanently disabled — refunds require admin click, never AI
+- **No Redis:** all real-time features replaced with polling against Postgres (alerts every 5s, inbox every 10s, presence via `users.last_seen`)
+- **Capacity:** sized for 50 concurrent users on AWS t3.small
 
 ---
 
-## Known pending design assets
+## Pending Design Assets
 
-- Mini GATES logo PNG for collapsed sidebar
-- Sara persona photo (professional avatar)
-- Real product images + SKUs (12+ products)
-- Confirmed brand green hex (`#4CAF50` pre-login vs `#166534` app shell — needs decision)
+- Mini GATES logo PNG (collapsed sidebar)
+- Sara persona photo
+- Product images + SKUs (12+ items)
 - Customer service phone number
-- WHY GATES? and CONTACT US page content
-- Admin panel concept — under review before adding to roadmap
+- Brand green decision: unify `#4CAF50` and `#166534`?
+- WhatsApp utility templates (8–10 needed; copywriting pending)
+- WHY GATES? / CONTACT US page content
+- Per-tier token-limit defaults
 
 ---
 
 ## Rollback notes
 
-- Step 3.5 was once attempted all-at-once and rolled back. Key lesson: `<Transition>` rejects multi-root components. Fix: single root `<div>` with `<Teleport to="body">` for modals.
-- Logo overlay `mix-blend-mode: soft-light` + parent `filter:drop-shadow` = compositing conflict. Fix: rim light on separate `<img>` element placed before shine-wrap in DOM.
+- Step 3.5 once attempted all-at-once and rolled back. `<Transition>` rejects multi-root components. Fix: single root `<div>` + `<Teleport to="body">` for modals.
+- Logo `mix-blend-mode: soft-light` + parent `filter:drop-shadow` = compositing conflict. Fix: rim light on separate `<img>` placed before shine-wrap in DOM.
