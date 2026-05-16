@@ -7,8 +7,6 @@ const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR WARRANTY AND SUPPORT
 const navActiveIndex = ref(0)
 const navItemRefs = ref([])
 const navIndicatorStyle = ref({ left: '0px', width: '0px' })
-const showWarrantyModal = ref(false)
-
 function updateNavIndicator(idx) {
   const el = navItemRefs.value[idx]
   if (!el) return
@@ -17,7 +15,7 @@ function updateNavIndicator(idx) {
 function onNavEnter(i) { updateNavIndicator(i) }
 function onNavLeave() { updateNavIndicator(navActiveIndex.value) }
 function onNavClick(i) {
-  if (i === navItems.length - 1) { showWarrantyModal.value = true; return }
+  if (i === navItems.length - 1) { openModal('login'); return }
   navActiveIndex.value = i
 }
 
@@ -86,18 +84,6 @@ function goChat() { window.location.href = '/chat' }
       :initial-state="modalInitialState"
     />
 
-    <!-- ── Warranty & Support modal (stub — content TBD) ─────────────────── -->
-    <Teleport to="body">
-      <Transition name="ws-enter">
-        <div v-if="showWarrantyModal" class="ws-backdrop">
-          <div class="ws-box" dir="ltr">
-            <button class="ws-close" @click="showWarrantyModal = false" aria-label="Close">✕</button>
-            <p class="ws-title">YOUR WARRANTY AND SUPPORT</p>
-            <p class="ws-body">This section is being prepared. Check back soon.</p>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
 
   </div>
 </template>
@@ -288,31 +274,6 @@ function goChat() { window.location.href = '/chat' }
 .chat-btn:hover { background: #4CAF50; color: #ffffff; }
 .chat-icon { flex-shrink: 0; }
 
-
-/* ── Warranty & Support stub modal ──────────────────────────────────────── */
-.ws-backdrop {
-  position: fixed; inset: 0; z-index: 50;
-  display: flex; align-items: center; justify-content: center; padding: 24px;
-  background: rgba(0,0,0,0.35);
-}
-.ws-box {
-  position: relative; width: 100%; max-width: 420px; padding: 36px 32px 32px;
-  box-sizing: border-box; border-radius: 24px;
-  background: rgba(255,255,255,0.72); backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px); border: 1px solid rgba(255,255,255,0.55);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.16); font-family: 'Almarai', sans-serif;
-}
-.ws-close {
-  position: absolute; top: 16px; right: 18px; background: none; border: none;
-  font-size: 17px; color: #888; cursor: pointer; padding: 4px 8px; transition: color 0.2s;
-}
-.ws-close:hover { color: #333; }
-.ws-title { font-size: 15px; font-weight: 800; color: #2d2d2d; margin: 0 0 12px; letter-spacing: 0.04em; }
-.ws-body  { font-size: 13.5px; color: #777; margin: 0; line-height: 1.6; }
-.ws-enter-enter-active { transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); }
-.ws-enter-leave-active { transition: opacity 0.22s ease, transform 0.22s ease; }
-.ws-enter-enter-from { opacity: 0; transform: translateX(-44px); }
-.ws-enter-leave-to   { opacity: 0; transform: translateX(20px); }
 
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
