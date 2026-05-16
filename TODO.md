@@ -6,241 +6,178 @@
 
 ## ✅ PHASE 0 — Pre-Login Home Page (Complete)
 
-- ✅ Phase 1 intro animation: fake cursor → draws green box → typewriter "GATES TECHNOLOGY" / "AT YOUR SERVICE" with typo correction sequence
-- ✅ Phase 2 aluminum plate (`#f0f0f0`) with perspective tilt toward cursor
-- ✅ Logo tilt + dynamic diagonal shine + sharp drop shadow (all driven by CSS vars)
+- ✅ Phase 1 intro animation: fake cursor → draws green box → typewriter "GATES TECHNOLOGY" / "AT YOUR SERVICE" with typo correction
+- ✅ Phase 2: white background, perspective tilt toward cursor, logo with dynamic shine overlay
+- ✅ Logo rim light pulse on entry (grey glow visible on white background)
 - ✅ Feature text, LOG IN / SIGN UP buttons, Trust Every Bit badge
 - ✅ Chat with Us button — rotating gradient border (`@property --angle`, `conic-gradient`)
-- ✅ `useTilt.js` composable — ±3.5 deg plate, ±6 deg logo, lerp 0.065, leans TOWARD cursor
-- ✅ `useTilt.js` — `pauseAndCenter()` lerps plate to 0,0 on modal open; `resume()` resumes cursor tracking
+- ✅ `useTilt.js` — ±3.5° plate, ±6° logo, lerp 0.065, leans TOWARD cursor
+- ✅ `useTilt.js` — `pauseAndCenter()` / `resume()` via window custom events
 
 ---
 
-## 🔄 PHASE 1 — Frontend Completion (Next Up)
+## 🔄 PHASE 1 — Frontend Completion (In Progress)
 
 > One step = one session = one commit. Never combine steps.
 > Read every file you will touch before writing a single line.
 
 ### ✅ AuthModal — `src/components/AuthModal.vue`
 
-5-state morphing glass modal. English for now — Arabic pass in a dedicated later session.
+5-state morphing glass modal. English for now.
 
-- ✅ **Login state** — identifier + password, "New User?" → register, "Forgot your password?" → forgot
-- ✅ **Register state** — full name (English only), WhatsApp number, alt phone (optional), city dropdown (27 EG cities, default Port Said), email (optional). Morphs to Welcome on success.
-- ✅ **Forgot state** — EG phone input → Send OTP → 60s resend countdown timer → Verify → Reset
-- ✅ **Reset state** — new password + confirm, min 8 characters
-- ✅ **Welcome state** — congratulations message, language picker (Arabic default), "Access My Dashboard" button
-- ✅ Egyptian phone validation: `010/011/012/015` prefix, 11 digits, normalises `+20` / `0020` prefix
-- ✅ Phone carries from login → register/forgot only if valid; email optional but validated if filled
-- ✅ No outside-click dismiss — X button only
-- ✅ Plate lerps to center on open, resumes following cursor on close
-- ✅ Glass effect: `backdrop-filter: blur(22px)`, semi-transparent white, glass border
-- ✅ Entrance: slide from left + fade (matches page transition)
-- ✅ State morphing: `min-height` transition + directional slide between panels
-- ⬜ **Arabic language pass** — translate all strings, flip layout to RTL for Arabic mode
+- ✅ Login · Register · Forgot · Reset · Welcome states
+- ✅ Egyptian phone validation (010/011/012/015, 11 digits, +20 normalised)
+- ✅ Email optional but validated if filled
+- ✅ No outside-click dismiss
+- ✅ Plate lerps to center on open, resumes on close
+- ✅ "Access My Dashboard" → `/app`
+- ⬜ **Arabic language pass** — translate all strings, flip layout to RTL
 
 ---
 
-### Step 3.5 — Pre-Auth Multi-Page Layout
+### ✅ Steps 3.5A–3.5E — Pre-Auth Multi-Page Layout
 
-> ⚠️ Was attempted and rolled back. Must be done one sub-step per session.
-> Key lesson: `<Transition>` rejects multi-root components — keep single root `<div>`, use `<Teleport to="body">` for modals.
-
-- ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created (nav, LOG IN/SIGN UP, Chat with Us, small logo placeholder, AuthModal wired)
-- ✅ **3.5B** — Router wired: PreAuthLayout is parent for `/`, PreLoginView is nested child
-
-- ✅ **3.5C** — Duplicate UI removed from PreLoginView. Entrance animations:
-  - Stationary layer hidden during intro via provide/inject setStationaryVisible
-  - Nav/auth-buttons slide from top, chat slides from bottom (CSS transitions)
-  - Taglines slide from top, trust badge slides from bottom (CSS keyframes)
-  - Logo rim light: white/silver border glow 2.2s ease-in-out on phase='main'
-  - AuthModal tilt events now window custom events (auth-modal-open/close)
-
-- ⬜ **3.5E** — Add placeholder views + routes
-  - `WhyGatesView.vue` — tilt plate page, no centered logo, no taglines. Route: `/why-gates`
-  - `ContactView.vue` — same as WhyGates. Route: `/contact`
-  - Wire nav clicks 1 + 2 (WHY GATES?, CONTACT US) to `router.push()` in PreAuthLayout
-  - YOUR WARRANTY AND SUPPORT already wired to AuthModal ✅
+- ✅ **3.5A** — `PreAuthLayout.vue` (nav, LOG IN/SIGN UP, Chat with Us, AuthModal)
+- ✅ **3.5B** — Router wired (PreAuthLayout parent, PreLoginView child)
+- ✅ **3.5C** — Duplicate UI removed from PreLoginView. Entrance animations. Window custom events for tilt.
+- ✅ **3.5E** — `WhyGatesView.vue` + `ContactView.vue` with tilt plate. Routes `/why-gates` + `/contact`. Nav wired.
+- ✅ **KeepAlive** — Home intro does not replay on back-navigation. `onActivated` resets nav indicator.
 
 - ⬜ **3.5F** — Page-slide transition
-  - Transition: slide from left + fade, smooth ease-in-out (horizontal)
+  - Horizontal slide + fade between pre-auth routes
   - `<Transition name="page-slide">` wrapping `<router-view>` in PreAuthLayout
-  - Stationary layer (nav, buttons, chat) must NOT move during transition
+  - Stationary layer must NOT move during transition
 
-- ⬜ **3.5D** — Small logo in PreAuthLayout (after routes exist)
-  - `gates-logo.png` at 80px, top-left, absolute position
+- ⬜ **3.5D** — Small logo in PreAuthLayout (top-left, 80px)
   - Hidden when `route.path === '/'`, visible on all other pre-auth routes
+  - Asset: `gates-logo.png` (pending correct small version)
 
 - ⬜ **3.5G** — Small logo fade on route change
-  - Navigating TO `/`: small logo fades out (handing off to large plate logo)
-  - Navigating FROM `/`: small logo fades in
+  - TO `/`: fade out (large plate logo takes over)
+  - FROM `/`: fade in
 
-- ⬜ **3.5H** — Final visual check of full welcome zone
+- ⬜ **3.5H** — Final visual check of full pre-auth zone
 
 ---
 
-### Step 4 — App Shell (Post-Login)
+### ✅ Steps 4A–4E — App Shell (Post-Login)
 
-Design reference: Claude.ai / Gemini UI — clean, no effects, functional.
+- ✅ **4A** — `AppShellLayout.vue`
+  - Topbar: search + My Profile link + Sign Out (confirmation modal) + avatar
+  - Left sidebar: collapsible (icons at < 1100px, hamburger drawer at < 768px)
+  - Right Sara chat panel: 480px, always visible
+  - Font: Inter (shell) · Almarai (Arabic chat content)
 
-- ⬜ **4A** — `AppShellLayout.vue`
-  - Fixed sidebar (240px left), fixed topbar (56px), scrollable content area
-  - White background, no tilt, no animations
-  - Mobile: sidebar hidden by default
+- ✅ **4B** — `/app` routes with children (tickets, live-chat, inbox, offers, warranty, loyalty, benefits, profile) → stub views
 
-- ⬜ **4B** — `/app` route using AppShellLayout
-  - Fake login from modal → `router.push('/app')` lands in shell
+- ✅ **4C** — Sidebar: Lucide icons, centered items, unread badge on Inbox, collapse toggle (ChevronsLeft/Right)
 
-- ⬜ **4C** — Customer sidebar items (in order)
-  - My Tickets · Live Chat · Personal Inbox (mail icon shakes when unread > 0, hardcode unread=1)
-  - Offers · My Warranty · Loyalty Points · My Benefits · My Profile
-  - Active route: green highlight
-  - Footer inside sidebar: customer service phone number
+- ✅ **4D** — Topbar: search, My Profile, Sign Out modal, avatar
 
-- ⬜ **4D** — Topbar
-  - Left: page title (changes with route)
-  - Right: user name (hardcoded) + avatar placeholder
-  - Mobile: hamburger button left
-
-- ⬜ **4E** — Mobile hamburger sidebar
-  - Slide-in drawer + overlay backdrop closes on tap
+- ✅ **4E** — Mobile hamburger drawer, responsive breakpoints
 
 ---
 
 ### Step 5 — Chat UI
 
-- ⬜ **5A** — `ChatView.vue` basic shell
-  - Scrollable message area, input pinned at bottom, send button, Enter key sends
-
-- ⬜ **5B** — Bubble components
-  - `CustomerBubble.vue`: right-aligned, charcoal bg, white text
-  - `AiBubble.vue`: left-aligned, white bg, subtle shadow
-  - `dir="auto"` on all bubble content
-
-- ⬜ **5C** — Sara persona header
-  - Photo placeholder + name "Sara" + subtitle "مساعدة GATES الذكية"
-  - Fixed at top of chat area
-
-- ⬜ **5D** — Thinking indicator
-  - Text: "جارٍ التحقق من المخزون..." + animated CSS dots (no library)
-
-- ⬜ **5E** — Image in AI bubble
-  - Product image URL in response → `<img>` inside bubble, rounded, max-width 200px
-
-- ⬜ **5F** — Comparison table in AI bubble
-  - Styled HTML table inside bubble, clean and readable
+- ⬜ **5A** — `ChatView.vue` — scrollable messages, pinned input, Enter sends
+- ⬜ **5B** — `CustomerBubble.vue` (right, charcoal) · `AiBubble.vue` (left, white shadow)
+- ⬜ **5C** — Sara header (avatar placeholder + name + Arabic subtitle)
+- ⬜ **5D** — Thinking indicator: "جارٍ التحقق من المخزون..." + animated dots
+- ⬜ **5E** — Product image in AI bubble (`<img>` rounded, max-width 200px)
+- ⬜ **5F** — Comparison table in AI bubble (styled HTML table)
 
 ---
 
-### Step 6 — Gemini API (Free Tier)
+### Step 6 — Gemini API
 
-- ⬜ **6A** — `src/services/gemini.js`
-  - Reads `VITE_GEMINI_API_KEY` from env
-  - Single reusable send function, returns text response
-
-- ⬜ **6B** — Sara system prompt
-  - Arabic-first, GATES Technology AI assistant, knows about products
-  - Name: Sara
-
-- ⬜ **6C** — Wire to ChatView
-  - User sends → thinking indicator → Gemini → response bubble
-  - Error: Arabic error message inside bubble
+- ⬜ **6A** — `src/services/gemini.js` — reads `VITE_GEMINI_API_KEY`, single send function
+- ⬜ **6B** — Sara system prompt (Arabic-first, GATES AI assistant)
+- ⬜ **6C** — Wire to ChatView: thinking indicator → Gemini → response bubble
 
 ---
 
 ### Step 7 — Product Data + Function Calling
 
-- ⬜ **7A** — `src/data/products.json`
-  - 12+ products: laptops, mice, keyboards, headsets, monitors, accessories
-  - Fields: id, sku, name_ar, name_en, category, brand, price (EGP), stock_status, specs (object), image_url
-
-- ⬜ **7B** — `search_inventory` Function Call
-  - Gemini function schema + handler that filters products.json
-  - Returns matched products; Gemini formats natural language response
-
-- ⬜ **7C** — `compare_products` Function Call
-  - Takes two product IDs, returns structured comparison
-  - Gemini renders as comparison table in bubble
-
-- ⬜ **7D** — Guest chat flow
-  - Chat works without login
-  - If guest tries to submit ticket or save → prompt to register
+- ⬜ **7A** — `src/data/products.json` — 12+ products (laptops, mice, keyboards, headsets, monitors)
+- ⬜ **7B** — `search_inventory` function call (filter products.json)
+- ⬜ **7C** — `compare_products` function call (two IDs → comparison table)
+- ⬜ **7D** — Guest chat flow (no login needed; prompt to register for tickets/save)
 
 ---
 
 ### Step 8 — Ticket Submission
 
-- ⬜ **8A** — `TicketsView.vue`
-  - Fields: subject, category (dropdown), description (textarea), submit button
-
-- ⬜ **8B** — Success screen
-  - Fake ticket number: GT-2024-XXXX (random on submit)
-  - Arabic confirmation message + back to home button
+- ⬜ **8A** — `TicketsView.vue` — subject, category, description, submit
+- ⬜ **8B** — Success screen: fake ticket number GT-2024-XXXX, Arabic confirmation
 
 ---
 
 ### Step 9 — System Status Banner
 
-- ⬜ **9A** — `StatusBanner.vue`
-  - Thin persistent bar at very top of all pages (pre and post login)
-  - Color variants: red / yellow / blue
-  - Default message: "نعمل حالياً على تحديث المنظومة" (red)
+- ⬜ **9A** — `StatusBanner.vue` — thin top bar, red/yellow/blue variants, Arabic default message
 
 ---
 
 ### Step 10 — Toast Component
 
-- ⬜ **10A** — `Toast.vue`
-  - Large centered toast (not corner), progress bar, dismiss button
-  - Fires 2 seconds after app shell loads
-  - Arabic message
+- ⬜ **10A** — `Toast.vue` — large centered toast, progress bar, fires 2s after app load
 
 ---
 
 ### Step 11 — Arabic Language Pass
 
-- ⬜ Translate all AuthModal strings to Arabic
-- ⬜ Flip AuthModal layout to RTL when Arabic is selected
-- ⬜ Wire `selectedLang` from Welcome state to a Pinia store / localStorage
-- ⬜ All other pre-auth pages: Arabic text content
+- ⬜ AuthModal full RTL translation
+- ⬜ All pre-auth pages in Arabic
+- ⬜ `selectedLang` from Welcome state → Pinia store / localStorage
+- ⬜ All other views
 
 ---
 
 ### Step 12 — Polish Pass
 
-- ⬜ Spacing consistency across all pages
-- ⬜ Typography hierarchy check
-- ⬜ All Arabic text rendering RTL correctly
-- ⬜ `dir="auto"` verified on all content areas
+- ⬜ Spacing consistency
+- ⬜ Typography hierarchy
+- ⬜ `dir="auto"` verified on all content
 - ⬜ Hover states on all interactive elements
-- ⬜ No console errors
-- ⬜ No broken images / 404s
-- ⬜ Footer with customer service phone number on all pages
+- ⬜ No console errors / 404s
+- ⬜ Footer with customer service phone
+
+---
+
+### Admin Panel (Pending Review)
+
+> Concept uploaded — needs audit before being added to roadmap.
+> Review criteria: no Redis, no email/SMTP, must fit AWS t3.small.
+
+- ⬜ Audit admin panel concept for infra requirements
+- ⬜ Add approved features to roadmap
+- ⬜ Build admin panel (separate layout, English LTR)
 
 ---
 
 ## ⬜ PHASE 2 — Real Backend
 
-> Server: AWS t3.small · AI: Gemini API Free Tier (dev/testing) · No Redis · No email/SMTP ever · WhatsApp Business API for all notifications
+> Server: AWS t3.small · AI: Gemini API Free Tier · No Redis · No email/SMTP ever · WhatsApp Business API
 
 ### Infrastructure
 - ⬜ Node.js + Fastify on EC2 t3.small
-- ⬜ PostgreSQL + Prisma (all tables per handover DB schema)
+- ⬜ PostgreSQL + Prisma
 - ⬜ Nginx + Certbot SSL
 - ⬜ Docker Compose full stack
 - ⬜ Daily `pg_dump` → S3 cron backup
 
 ### Auth
-- ⬜ JWT auth + refresh token rotation
-- ⬜ WhatsApp Business API OTP (no email ever)
+- ⬜ JWT + refresh token rotation
+- ⬜ WhatsApp Business API OTP
 - ⬜ Real registration + login
-- ⬜ Role-based permissions — DB-driven, never hardcoded
+- ⬜ Role-based permissions (DB-driven, never hardcoded)
 
 ### Core Features
 - ⬜ Real ticket system + file attachments
 - ⬜ Socket.io live chat — Sara (AI) first, human agent takeover
-- ⬜ Personal inbox — single polling endpoint (inbox + toasts + banner)
-- ⬜ WhatsApp bot — same Gemini service, not duplicated
+- ⬜ Personal inbox — single polling endpoint
+- ⬜ WhatsApp bot — same Gemini service
 - ⬜ Inventory management — Excel import → DB upsert, JSONB specs
 
 ### Admin Panel
@@ -248,7 +185,7 @@ Design reference: Claude.ai / Gemini UI — clean, no effects, functional.
 - ⬜ Role management UI
 - ⬜ Ticket management dashboard
 - ⬜ Inventory management UI
-- ⬜ Analytics / reporting views
+- ⬜ Analytics / reporting
 
 ### Extended Features
 - ⬜ WebRTC calls + coturn TURN server
@@ -259,7 +196,7 @@ Design reference: Claude.ai / Gemini UI — clean, no effects, functional.
 - ⬜ Back-in-stock waitlist + WhatsApp push
 
 ### Go-Live Checklist
-- ⬜ Load test on t3.small before go-live
+- ⬜ Load test on t3.small
 - ⬜ Mobile responsive pass (real device)
 - ⬜ Security audit
 - ⬜ Go-live
@@ -268,9 +205,10 @@ Design reference: Claude.ai / Gemini UI — clean, no effects, functional.
 
 ## Pending Design Decisions
 
-- [ ] Content for: WHY GATES? and CONTACT US pages (text, structure)
-- [ ] Content for: YOUR WARRANTY AND SUPPORT modal (fields, flow)
-- [ ] Sara persona photo — professional avatar asset needed
-- [ ] Real product images and SKUs for the 12+ products
-- [ ] Customer service phone number for sidebar/footer
-- [ ] Exact GATES green hex (currently `#4CAF50` — confirm with brand)
+- [ ] Mini GATES logo PNG for collapsed sidebar state
+- [ ] Content for: WHY GATES? and CONTACT US pages
+- [ ] Sara persona photo (professional avatar)
+- [ ] Real product images and SKUs (12+ products)
+- [ ] Customer service phone number
+- [ ] Confirmed brand green: `#4CAF50` (pre-login) vs `#166534` (app shell) — unify?
+- [ ] Admin panel feature scope (pending concept review)

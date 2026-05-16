@@ -1,68 +1,115 @@
 # GATES-CARE — Status
 
-## Current state: Phase 0 COMPLETE — Phase 1 frontend in progress
+**Last updated: 2026-05-16**
 
-PreLoginView.vue is stable and committed. Two-phase page:
-- Phase 1: fake cursor → draws green box → typewriter "GATES TECHNOLOGY" / "AT YOUR SERVICE" (typo sequence) → fade into Phase 2
-- Phase 2: aluminum plate (`#f0f0f0`), tilt toward cursor via useTilt.js, logo with dynamic shine + shadow, feature text, LOG IN / SIGN UP buttons, Chat with Us button (rotating gradient border)
+---
 
-useTilt.js: ±3.5deg plate, ±6deg logo, lerp 0.065, leans TOWARD cursor.
-New: `pauseAndCenter()` — sets target to 0,0 so plate lerps to center; `resume()` resumes cursor tracking.
+## Current state: Phase 1 frontend — App Shell built, pre-auth routes stable
 
-Budget approved. Building real product — no demo framing.
-AI: Gemini API Free Tier (dev/testing). Server: AWS t3.small (Phase 2).
-See TODO.md for full roadmap.
+---
 
-## AuthModal — BUILT ✅ (src/components/AuthModal.vue)
+## Pre-login (Phase 0 — COMPLETE ✅)
 
-5-state morphing glass modal. English for now — Arabic pass is a future step.
+- Phase 1 intro: fake cursor → green box → typewriter with typo correction
+- Phase 2: white background, logo with dynamic shine + drop shadow, perspective tilt toward cursor
+- `useTilt.js`: ±3.5° plate, ±6° logo, lerp 0.065, leans TOWARD cursor
+- `pauseAndCenter()` / `resume()` wired to AuthModal open/close via window custom events
 
-| State | Trigger | Notes |
-|-------|---------|-------|
-| login | LOG IN / SIGN UP buttons | identifier + password, links to forgot/register |
-| register | "New User?" in login | 5 fields, phone validation, email optional, morphs to welcome on success |
-| forgot | "Forgot your password?" in login | EG phone → Send OTP → 60s resend timer |
-| reset | After OTP verified | new + confirm password, min 8 chars |
-| welcome | After register success | language picker (Arabic default), Access My Dashboard |
+**Committed:** `stable v3` (d90b022), `stable v4` (ce8b6ad)
 
-Key rules baked in:
-- Egyptian phone validation: `010/011/012/015` prefix, 11 digits, `+20` prefix normalised
-- Phone carries from login → register/forgot only if valid EG number
-- Email optional in register; if filled must be valid format
-- No outside-click dismiss — X button only
-- Plate lerps to center on open, resumes on close
+---
 
-## Next step: Step 3.5E
+## Pre-auth layout (Steps 3.5A–3.5E — COMPLETE ✅)
 
-One sub-step per session. Do NOT combine steps.
+- `PreAuthLayout.vue` — stationary overlay (nav + auth buttons + chat CTA) shown on non-home routes
+- Router: PreAuthLayout parent, PreLoginView / WhyGatesView / ContactView as children
+- `<KeepAlive include="PreLoginView">` — home intro does not replay on back-navigation
+- Entrance animations: nav/buttons slide from top, taglines/trust badge slide from bottom
+- `WhyGatesView` + `ContactView`: tilt plate pages, nav wired to `router.push()`
+- Active nav indicator syncs on `onActivated` (KeepAlive hook)
 
-- ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created
-- ✅ **AuthModal** — 5-state glass modal built, wired into PreAuthLayout
-- ✅ **3.5B** — Router wired. PreAuthLayout is parent, PreLoginView is child.
-- ✅ **3.5C** — Duplicate UI removed from PreLoginView. Entrance animations added:
-  - Stationary layer (nav/buttons/chat): CSS slide from top/bottom via provide/inject
-  - Taglines: slide from top (0.08s delay), trust badge: slide from bottom (0.14s)
-  - Logo: white/silver rim light border glow (2.2s ease-in-out) when phase='main'
-  - AuthModal tilt pause/resume now via window custom events (not emits)
-- **3.5E** ← NEXT — Add WhyGatesView + ContactView placeholder pages + routes, wire nav clicks
-- **3.5F** — Page-slide transition (horizontal slide + fade)
-- **3.5D** — Small logo (needs routes to exist first)
-- **3.5G** — Small logo fade on route change
-- **3.5H** — Final visual check
+**Still pending in pre-auth:**
+- ⬜ 3.5F — Page-slide transition (horizontal slide + fade on `<router-view>`)
+- ⬜ 3.5D — Small logo in PreAuthLayout top-left (hidden on `/`, visible on other routes)
+- ⬜ 3.5G — Small logo fade on route change
+- ⬜ 3.5H — Final visual check
 
-## Known rollback lesson
-Step 3.5 was attempted all-at-once and rolled back. Key issue: `<Transition>` rejects multi-root components. Fix: `<Teleport to="body">` must be inside a single root `<div>`, not a sibling root node.
+---
 
-## Design decisions locked this session
+## AuthModal (COMPLETE ✅)
 
-**Nav — 4 items (was 5):**
-HOME · WHY GATES? · CONTACT US · YOUR WARRANTY AND SUPPORT
+5-state glass modal: login → register → forgot → reset → welcome.
+English strings. Arabic pass is a future dedicated session.
+"Access My Dashboard" → `router.push('/app')`.
 
-**Page designs:**
-- WHY GATES? → tilt plate page, no centered logo, no taglines block
-- CONTACT US → same as WHY GATES?
-- YOUR WARRANTY AND SUPPORT → modal overlay (not a route), triggered from nav
+---
 
-**Page transition:** slide from left + fade, smooth ease-in-out (horizontal, not vertical)
+## App Shell (Steps 4A–4E — COMPLETE ✅)
 
-**AuthModal language:** English now, Arabic pass later (all strings to be translated in one dedicated session)
+`src/layouts/AppShellLayout.vue`
+
+**Topbar:**
+- Search bar (left)
+- My Profile link with User icon + label (right)
+- Sign Out button with confirmation modal
+- User avatar initials (right)
+
+**Left sidebar:**
+- Lucide icons: Ticket, MessageCircle, Mail, Tag, Shield, Star, Gift
+- Centered nav items (justify-content: center)
+- Collapses to 62px icons-only: toggle at bottom with ChevronsLeft / ChevronsRight
+- "G" mini placeholder shown when collapsed (real asset pending)
+- Auto-collapses at < 1100px via CSS, hidden at < 768px (hamburger drawer)
+- My Profile removed from sidebar — lives in topbar
+- No hover color change on active item
+
+**Right Sara chat panel (480px):**
+- Sara header: gradient avatar, online dot, name + Arabic subtitle
+- Chat messages: Arabic AI bubbles (left) + user bubbles (right, green)
+- Thinking indicator: animated CSS dots
+- Input: Arabic placeholder, dir="auto", Enter to send
+- Always visible — not hidden at any breakpoint (essential feature)
+- Box shadow on left edge separates from main content
+
+**Font:** Inter (app shell UI) · Almarai (chat bubbles, Arabic text)
+**Icons:** `lucide-vue-next`
+
+**Routes under `/app`:**
+tickets · live-chat · inbox · offers · warranty · loyalty · benefits · profile
+All currently show stub views (page name centered). Real views = Step 5+.
+
+---
+
+## Next steps (in order)
+
+1. ⬜ Admin panel concept review (concept uploaded, pending audit for Redis/infra requirements)
+2. ⬜ 3.5F — Pre-auth page-slide transition
+3. ⬜ 3.5D/G — Small logo in PreAuthLayout with fade on route change
+4. ⬜ Arabic language pass — AuthModal full RTL translation
+5. ⬜ Step 5 — Chat UI (real views: ChatView, bubbles, Sara header, comparison tables)
+6. ⬜ Step 6 — Gemini API integration
+7. ⬜ Step 7 — Product data + function calling
+8. ⬜ Step 8 — Ticket submission
+9. ⬜ Step 9 — System status banner
+10. ⬜ Step 10 — Toast component
+11. ⬜ Step 11 — Arabic language pass (all views)
+12. ⬜ Step 12 — Polish pass
+
+---
+
+## Known pending design assets
+
+- Mini GATES logo PNG for collapsed sidebar
+- Sara persona photo (professional avatar)
+- Real product images + SKUs (12+ products)
+- Confirmed brand green hex (`#4CAF50` pre-login vs `#166534` app shell — needs decision)
+- Customer service phone number
+- WHY GATES? and CONTACT US page content
+- Admin panel concept — under review before adding to roadmap
+
+---
+
+## Rollback notes
+
+- Step 3.5 was once attempted all-at-once and rolled back. Key lesson: `<Transition>` rejects multi-root components. Fix: single root `<div>` with `<Teleport to="body">` for modals.
+- Logo overlay `mix-blend-mode: soft-light` + parent `filter:drop-shadow` = compositing conflict. Fix: rim light on separate `<img>` element placed before shine-wrap in DOM.

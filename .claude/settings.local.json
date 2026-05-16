@@ -2,7 +2,26 @@
   "permissions": {
     "allow": [
       "PowerShell(npm run *)",
-      "PowerShell(Get-Command *)"
+      "PowerShell(Get-Command *)",
+      "PowerShell(New-Item *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git -C \"D:/GATESGCARE/gates-helpdesk\" add src/layouts/PreAuthLayout.vue)",
+      "Bash(git -C \"D:/GATESGCARE/gates-helpdesk\" status)",
+      "Bash(git *)",
+      "Bash(npx vite *)",
+      "PowerShell(taskkill *)",
+      "PowerShell($env:PATH += ';C:\\\\Program Files\\\\Git\\\\cmd'; cd D:\\\\GATESGCARE\\\\gates-helpdesk; npx vite build --mode development 2>&1 | Select-Object -Last 20)",
+      "PowerShell(git *)",
+      "PowerShell($env:PATH += ';C:\\\\Program Files\\\\Git\\\\cmd'; cd D:\\\\GATESGCARE\\\\gates-helpdesk; git status; Write-Host \"---\"; git log --oneline -5; Write-Host \"---\"; git remote -v)",
+      "PowerShell(git push *)",
+      "PowerShell($env:PATH += ';C:\\\\Program Files\\\\Git\\\\cmd'; cd D:\\\\GATESGCARE\\\\gates-helpdesk; npx vite build --mode development 2>&1 | Select-Object -Last 8)",
+      "PowerShell($env:PATH += ';C:\\\\Program Files\\\\Git\\\\cmd'; cd D:\\\\GATESGCARE\\\\gates-helpdesk; npx vite build --mode development 2>&1 | Select-Object -Last 5)",
+      "PowerShell(npm install *)",
+      "PowerShell($env:PATH += ';C:\\\\Program Files\\\\Git\\\\cmd'; cd D:\\\\GATESGCARE\\\\gates-helpdesk; npx vite build --mode development 2>&1 | Select-Object -Last 6)"
     ]
   }
 }
