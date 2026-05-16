@@ -1,12 +1,16 @@
-# GATES Helpdesk — Status
+# GATES-CARE — Status
 
-## Current state: Step 3 COMPLETE
+## Current state: Phase 0 COMPLETE — Phase 1 frontend in progress
 
 PreLoginView.vue is stable and committed. Two-phase page:
 - Phase 1: fake cursor → draws green box → typewriter "GATES TECHNOLOGY" / "AT YOUR SERVICE" (typo sequence) → fade into Phase 2
 - Phase 2: aluminum plate (`#f0f0f0`), tilt toward cursor via useTilt.js, logo with dynamic shine + shadow, feature text, LOG IN / SIGN UP buttons, modal (Arabic RTL, stubs to `/app`), Chat with Us button (rotating gradient border)
 
 useTilt.js: ±3.5deg plate, ±6deg logo, lerp 0.065, leans TOWARD cursor.
+
+Budget approved. Building real product — no demo framing.
+AI: Gemini API Free Tier (dev/testing). Server: AWS t3.small (Phase 2).
+See TODO.md for full roadmap.
 
 ## Next step: Step 3.5 — Pre-Auth Layout System
 

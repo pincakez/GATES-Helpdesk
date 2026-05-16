@@ -1,7 +1,7 @@
-# GATES Helpdesk
+# GATES-CARE Helpdesk
 
-Vue 3 + Vite + Tailwind v4. No backend. Demo-only SPA.
-Run: `npm run dev` → localhost:5173
+Vue 3 + Vite + Tailwind v4. Frontend SPA (Phase 1). Real backend coming in Phase 2 (Node.js + Fastify on AWS t3.small).
+AI: Gemini API Free Tier. Run: `npm run dev` → localhost:5173
 
 ## Stack
 - Vue 3 (`<script setup>`), Vue Router 4, Pinia (minimal)
@@ -41,4 +41,5 @@ public/assets/trust-every-bit.png
 - One logical change per session. Commit before moving to the next.
 - Read every file you will touch before writing a single line.
 - See STATUS.md for current state and next step.
-- Full history and roadmap: docs/HANDOVER.md, docs/PLAN.md
+- Full roadmap and to-do: TODO.md
+- Architecture history: docs/HANDOVER.md
