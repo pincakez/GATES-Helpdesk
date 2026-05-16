@@ -254,12 +254,10 @@ onUnmounted(() => {
       <div class="plate-perspective">
       <div class="plate-content" ref="plateTiltRef">
 
-        <!-- Center logo — rim light sits BEHIND shine-wrap so its filter doesn't affect the overlay -->
+        <!-- Center logo -->
         <div class="logo-center">
-          <img class="logo-rim" src="/assets/gates-logo.png" aria-hidden="true" />
           <div class="logo-shine-wrap" ref="logoTiltRef">
             <img src="/assets/gates-logo.png" alt="GATES Technology" class="gates-logo" />
-            <div class="logo-overlay" ref="shineElRef"></div>
           </div>
         </div>
 
@@ -454,7 +452,7 @@ onUnmounted(() => {
 .phase2--in     { opacity: 1; transform: scale(1); pointer-events: auto; }
 .phase2--visible { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-.plate-perspective { width: 100%; height: 100%; }
+.plate-perspective { width: 100%; height: 100%; perspective: 1200px; }
 
 .plate-content {
   width: 100%;
@@ -463,6 +461,7 @@ onUnmounted(() => {
   background: transparent;
   padding: 28px 32px;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
 }
 
 /* ── UI layer ────────────────────────────────────────────────────────────── */
@@ -612,31 +611,6 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Rim light sits BEHIND logo-shine-wrap (DOM order = lower z).
-   Its filter:drop-shadow never touches the mix-blend-mode overlay inside logo-shine-wrap. */
-.logo-rim {
-  position: absolute;
-  width: 385px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: block;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  opacity: 0;
-}
-.phase2--visible .logo-rim {
-  animation: logo-rim-light 2.6s ease-in-out both;
-}
-@keyframes logo-rim-light {
-  0%   { opacity: 0; }
-  18%  { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
-  50%  { opacity: 1; filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)) drop-shadow(0 0 7px rgba(220,230,225,0.7)); }
-  82%  { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
-  100% { opacity: 0; }
-}
-
 .logo-shine-wrap {
   position: relative;
   display: inline-block;
@@ -651,25 +625,6 @@ onUnmounted(() => {
   user-select: none;
   -webkit-user-drag: none;
   filter: drop-shadow(var(--logo-shadow-x, 0px) var(--logo-shadow-y, 8px) 8px rgba(0,0,0,0.45));
-}
-
-.logo-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    var(--shine-angle, 148deg),
-    rgba(0,0,0,0.20) 0%,
-    rgba(0,0,0,0.05) 30%,
-    rgba(255,255,255,0.80) 50%,
-    rgba(0,0,0,0.05) 70%,
-    rgba(0,0,0,0.20) 100%
-  );
-  -webkit-mask-image: url('/assets/gates-logo.png');
-  mask-image: url('/assets/gates-logo.png');
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  mix-blend-mode: soft-light;
-  pointer-events: none;
 }
 
 /* ── Trust badge ─────────────────────────────────────────────────────────── */
@@ -767,7 +722,6 @@ onUnmounted(() => {
   .chat-cta { bottom: 32px; right: 24px; }
   .trust-img { width: 180px; }
   .gates-logo { width: 280px; }
-  .logo-rim { width: 280px; }
   .intro-line1 { font-size: 28px; }
   .intro-box { height: 60px; }
   .intro-box-text { font-size: 22px; }
