@@ -454,16 +454,15 @@ onUnmounted(() => {
 .phase2--in     { opacity: 1; transform: scale(1); pointer-events: auto; }
 .phase2--visible { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-.plate-perspective { width: 100%; height: 100%; perspective: 1200px; }
+.plate-perspective { width: 100%; height: 100%; }
 
 .plate-content {
   width: 100%;
   height: 100%;
   position: relative;
-  background: #f0f0f0;
+  background: transparent;
   padding: 28px 32px;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transform-style: preserve-3d;
 }
 
 /* ── UI layer ────────────────────────────────────────────────────────────── */
@@ -644,7 +643,6 @@ onUnmounted(() => {
   line-height: 0;
   overflow: visible;
   transform: rotateX(var(--logo-rx, 0deg)) rotateY(var(--logo-ry, 0deg));
-  transform-style: preserve-3d;
 }
 
 .gates-logo {
@@ -763,7 +761,6 @@ onUnmounted(() => {
    MOBILE
 ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .plate-content { background: transparent; }
   .taglines { top: 32px; left: 24px; }
   .auth-buttons { top: 32px; right: 24px; }
   .trust-badge { bottom: 32px; left: 24px; }
