@@ -1,0 +1,6 @@
+{
+  "name": "Gates Tech Admin Panel",
+  "description": "Admin panel concept for Gates Technology Helpdesk, featuring dark mode and SPA design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
