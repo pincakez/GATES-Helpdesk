@@ -32,15 +32,19 @@ Key rules baked in:
 - No outside-click dismiss — X button only
 - Plate lerps to center on open, resumes on close
 
-## Next step: Step 3.5B — Wire router
+## Next step: Step 3.5E
 
 One sub-step per session. Do NOT combine steps.
 
 - ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created
-- ✅ **AuthModal** — 5-state glass modal built, wired into PreLoginView + PreAuthLayout
+- ✅ **AuthModal** — 5-state glass modal built, wired into PreAuthLayout
 - ✅ **3.5B** — Router wired. PreAuthLayout is parent, PreLoginView is child.
-- **3.5C** ← NEXT — Remove duplicate nav/buttons/chat from PreLoginView (UI is currently doubled)
-- **3.5E** — Add WhyGatesView + ContactView placeholder pages + routes, wire nav clicks
+- ✅ **3.5C** — Duplicate UI removed from PreLoginView. Entrance animations added:
+  - Stationary layer (nav/buttons/chat): CSS slide from top/bottom via provide/inject
+  - Taglines: slide from top (0.08s delay), trust badge: slide from bottom (0.14s)
+  - Logo: white/silver rim light border glow (2.2s ease-in-out) when phase='main'
+  - AuthModal tilt pause/resume now via window custom events (not emits)
+- **3.5E** ← NEXT — Add WhyGatesView + ContactView placeholder pages + routes, wire nav clicks
 - **3.5F** — Page-slide transition (horizontal slide + fade)
 - **3.5D** — Small logo (needs routes to exist first)
 - **3.5G** — Small logo fade on route change

@@ -49,11 +49,12 @@
 - ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created (nav, LOG IN/SIGN UP, Chat with Us, small logo placeholder, AuthModal wired)
 - ✅ **3.5B** — Router wired: PreAuthLayout is parent for `/`, PreLoginView is nested child
 
-- ⬜ **3.5C** — Remove duplicate elements from PreLoginView ⚠️ DO THIS NEXT
-  - PreAuthLayout already has nav, LOG IN/SIGN UP, Chat with Us, AuthModal
-  - PreLoginView still has them too → UI is currently doubled (two navs, two button sets)
-  - Remove from PreLoginView: nav menu + indicator logic, LOG IN/SIGN UP buttons, Chat with Us button, AuthModal instance
-  - Keep in PreLoginView: Phase 1 intro, Phase 2 plate + logo + tilt, taglines, trust badge
+- ✅ **3.5C** — Duplicate UI removed from PreLoginView. Entrance animations:
+  - Stationary layer hidden during intro via provide/inject setStationaryVisible
+  - Nav/auth-buttons slide from top, chat slides from bottom (CSS transitions)
+  - Taglines slide from top, trust badge slides from bottom (CSS keyframes)
+  - Logo rim light: white/silver border glow 2.2s ease-in-out on phase='main'
+  - AuthModal tilt events now window custom events (auth-modal-open/close)
 
 - ⬜ **3.5E** — Add placeholder views + routes
   - `WhyGatesView.vue` — tilt plate page, no centered logo, no taglines. Route: `/why-gates`
