@@ -16,7 +16,7 @@ See TODO.md for full roadmap.
 
 One sub-step per session. Do NOT combine steps.
 
-- **3.5A** — Create `src/layouts/PreAuthLayout.vue` (stationary nav/buttons/chat layer only, no routing changes). Commit.
+- ✅ **3.5A** — `src/layouts/PreAuthLayout.vue` created. Nav, LOG IN/SIGN UP, Chat with Us, small logo placeholder, modal via Teleport. Not wired to router yet.
 - **3.5B** — Update router: PreAuthLayout as parent for `/`, nest PreLoginView under it. Move modal trigger. Commit.
 - **3.5C** — Move stationary elements (LOG IN, SIGN UP, Chat with Us, nav) out of PreLoginView into PreAuthLayout. Commit.
 - **3.5D** — Add small logo to PreAuthLayout (80px, hidden on `/`). Commit.
