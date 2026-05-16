@@ -6,6 +6,7 @@ export function useTilt({ plateEl, logoEl, shineEl }) {
   let mouse = { x: 0.5, y: 0.5 }
   let curPRx = 0, curPRy = 0
   let animId = null
+  let paused = false
 
   function onMouse(e) {
     mouse.x = e.clientX / window.innerWidth
@@ -13,8 +14,8 @@ export function useTilt({ plateEl, logoEl, shineEl }) {
   }
 
   function loop() {
-    const targetRy = -(mouse.x - 0.5) * 2 * maxPlate
-    const targetRx = -(mouse.y - 0.5) * 2 * maxPlate
+    const targetRy = paused ? 0 : -(mouse.x - 0.5) * 2 * maxPlate
+    const targetRx = paused ? 0 : -(mouse.y - 0.5) * 2 * maxPlate
 
     curPRy += (targetRy - curPRy) * lerpFactor
     curPRx += (targetRx - curPRx) * lerpFactor
@@ -54,5 +55,8 @@ export function useTilt({ plateEl, logoEl, shineEl }) {
     document.removeEventListener('mousemove', onMouse)
   }
 
-  return { start, stop }
+  function pauseAndCenter() { paused = true }
+  function resume() { paused = false }
+
+  return { start, stop, pauseAndCenter, resume }
 }

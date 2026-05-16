@@ -1,8 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
+import AuthModal from '../components/AuthModal.vue'
 
 // ── Nav ───────────────────────────────────────────────────────────────────
 const navItems = ['HOME', 'WHY GATES?', 'CONTACT US', 'YOUR SUPPORT', 'YOUR WARRANTY']
@@ -23,17 +21,10 @@ onMounted(() => { updateNavIndicator(0) })
 
 // ── Modal ─────────────────────────────────────────────────────────────────
 const showModal = ref(false)
-const activeTab = ref('login')
-const loginPhone = ref('')
-const loginPass = ref('')
-const regName = ref('')
-const regPhone = ref('')
+const modalInitialState = ref('login')
 
-function openModal(tab = 'login') { activeTab.value = tab; showModal.value = true }
-function closeModal() { showModal.value = false }
-function submitLogin() { closeModal(); router.push('/app') }
-function submitRegister() { closeModal(); router.push('/app') }
-function goChat() { router.push('/chat') }
+function openModal(tab = 'login') { modalInitialState.value = tab; showModal.value = true }
+function goChat() { window.location.href = '/chat' }
 </script>
 
 <template>
@@ -85,53 +76,11 @@ function goChat() { router.push('/chat') }
 
     </div>
 
-    <!-- ── Modal — Teleport keeps this single-root-safe for <Transition> ── -->
-    <Teleport to="body">
-      <Transition name="modal-fade">
-        <div
-          v-if="showModal"
-          class="modal-backdrop"
-          @click.self="closeModal"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div class="modal" dir="rtl">
-            <button class="modal-close" @click="closeModal" aria-label="إغلاق">✕</button>
-
-            <div class="modal-tabs" role="tablist">
-              <button
-                role="tab"
-                :aria-selected="activeTab === 'login'"
-                :class="['modal-tab', activeTab === 'login' && 'modal-tab--active']"
-                @click="activeTab = 'login'"
-              >تسجيل الدخول</button>
-              <button
-                role="tab"
-                :aria-selected="activeTab === 'register'"
-                :class="['modal-tab', activeTab === 'register' && 'modal-tab--active']"
-                @click="activeTab = 'register'"
-              >إنشاء حساب</button>
-            </div>
-
-            <form v-if="activeTab === 'login'" class="modal-form" @submit.prevent="submitLogin">
-              <input v-model="loginPhone" type="tel" dir="auto" placeholder="رقم الهاتف أو اسم المستخدم" class="modal-input" autocomplete="tel" />
-              <input v-model="loginPass" type="password" dir="auto" placeholder="كلمة المرور" class="modal-input" autocomplete="current-password" />
-              <a href="#" class="modal-forgot">نسيت كلمة المرور؟</a>
-              <button type="submit" class="modal-btn-primary">تسجيل الدخول</button>
-            </form>
-
-            <form v-else class="modal-form" @submit.prevent="submitRegister">
-              <input v-model="regName" type="text" dir="auto" placeholder="Full Name" class="modal-input" autocomplete="name" />
-              <div class="modal-field">
-                <input v-model="regPhone" type="tel" dir="auto" placeholder="رقم الهاتف / واتساب" class="modal-input" autocomplete="tel" />
-                <span class="modal-hint">أدخل الرقم المرتبط بحساب واتساب</span>
-              </div>
-              <button type="submit" class="modal-btn-primary">إنشاء حساب</button>
-            </form>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <!-- ── Modal ─────────────────────────────────────────────────────────── -->
+    <AuthModal
+      v-model:open="showModal"
+      :initial-state="modalInitialState"
+    />
 
   </div>
 </template>
@@ -322,131 +271,6 @@ function goChat() { router.push('/chat') }
 .chat-btn:hover { background: #4CAF50; color: #ffffff; }
 .chat-icon { flex-shrink: 0; }
 
-/* ── Modal ───────────────────────────────────────────────────────────────── */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal {
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 420px;
-  padding: 32px 28px 28px;
-  position: relative;
-  box-sizing: border-box;
-  font-family: 'Almarai', sans-serif;
-}
-
-.modal-close {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: none;
-  border: none;
-  font-size: 18px;
-  color: #999;
-  cursor: pointer;
-  padding: 4px 8px;
-  line-height: 1;
-  transition: color 0.2s;
-}
-.modal-close:hover { color: #333; }
-
-.modal-tabs {
-  display: flex;
-  border-bottom: 1px solid #e5e5e5;
-  margin-bottom: 24px;
-}
-
-.modal-tab {
-  flex: 1;
-  padding: 12px 8px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-family: 'Almarai', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #aaa;
-  cursor: pointer;
-  margin-bottom: -1px;
-  transition: color 0.2s, border-color 0.2s;
-}
-.modal-tab--active { color: #2d2d2d; border-bottom-color: #4CAF50; }
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.modal-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 13px 16px;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 12px;
-  font-family: 'Almarai', sans-serif;
-  font-size: 14px;
-  color: #2d2d2d;
-  outline: none;
-  background: #fafafa;
-  transition: border-color 0.2s;
-  text-align: right;
-}
-.modal-input:focus { border-color: #4CAF50; background: #fff; }
-.modal-input::placeholder { color: #bbb; }
-
-.modal-field { display: flex; flex-direction: column; gap: 5px; }
-
-.modal-hint { font-size: 11.5px; color: #aaa; padding-right: 4px; }
-
-.modal-forgot {
-  display: block;
-  text-align: right;
-  color: #4CAF50;
-  font-size: 13px;
-  font-family: 'Almarai', sans-serif;
-  text-decoration: none;
-  margin-top: -4px;
-  transition: color 0.2s;
-}
-.modal-forgot:hover { color: #388E3C; }
-
-.modal-btn-primary {
-  width: 100%;
-  padding: 13px;
-  background: #4CAF50;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-family: 'Almarai', sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  margin-top: 4px;
-}
-.modal-btn-primary:hover { background: #43A047; }
-.modal-btn-primary:active { transform: scale(0.98); }
-
-.modal-fade-enter-active,
-.modal-fade-leave-active { transition: opacity 0.25s ease; }
-.modal-fade-enter-from,
-.modal-fade-leave-to { opacity: 0; }
-.modal-fade-enter-active .modal,
-.modal-fade-leave-active .modal { transition: transform 0.25s ease; }
-.modal-fade-enter-from .modal { transform: translateY(16px) scale(0.97); }
-.modal-fade-leave-to .modal { transform: translateY(8px) scale(0.98); }
 
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
